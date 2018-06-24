@@ -26,9 +26,7 @@ public class Robot extends TimedRobot {
 
     int _talon_timeout = 50; // Talon timeout set to 50 millisecondss
 
-    PowerDistributionPanel _pdp = new PowerDistributionPanel();    // PDP must be set to ID 0
-
-    MiniPID _turning_loop = new MiniPID(1,0,0);
+    PowerDistributionPanel _pdp = new PowerDistributionPanel();    // PDP must be set to ID 0  
 
     public void robotInit() { 
 
@@ -48,27 +46,31 @@ public class Robot extends TimedRobot {
 
         // Set PID paramaters
         _turning_loop.setOutputLimits(1);   // Sets output of the loop to a value the Talons can read
-        _turning_loop.setOutputFilter(0.1);
-        _turning_loop.setOutputRampRate(0.1);
+        _turning_loop.setOutputFilter(1);
+        _turning_loop.setOutputRampRate(.2);
+
+        _drive_loop.setOutputLimits(1);   // Sets output of the loop to a value the Talons can read
+        _drive_loop.setOutputFilter(1);
+        _drive_loop.setOutputRampRate(.1);
     } 
 
     public void autonomousInit() { 
         // Zero sensors
+        
+    }
+
+    public void disabledPeriodic() { 
         _navx.reset();
         _talon_left_master.setSelectedSensorPosition(0, 0, _talon_timeout);
         _talon_right_master.setSelectedSensorPosition(0, 0, _talon_timeout);
         _turning_loop.reset();
     }
 
-    public void disabledPeriodic() { 
-
-    }
-
     double _motor_power = 0;  
     public void autonomousPeriodic() { 
-        _motor_power = _turning_loop.getOutput(_navx.getAngle(),90);
-        _talon_left_master.set(ControlMode.PercentOutput, _motor_power);
-        _talon_right_master.set(ControlMode.PercentOutput, -_motor_power);
+        
+        driveToPosition(toCycles(48));
+        
     }
 
     public void teleopPeriodic() { 
@@ -79,5 +81,40 @@ public class Robot extends TimedRobot {
 
     public void robotPeriodic() {
         SmartDashboard.putNumber("Amp Draw", _pdp.getTotalCurrent());   // Total amp draw Dashboard readout
+    }
+
+    public static int toCycles(double inches){
+        return (int)(inches*41.259408031924259196794170555305);
+    }
+
+    MiniPID _drive_loop = new MiniPID(.001,0,.02);
+    public void driveToPosition(int setpoint){
+        _motor_power = _drive_loop.getOutput((_talon_right_master.getSelectedSensorPosition(0) + _talon_left_master.getSelectedSensorPosition(0))/2,setpoint);
+        _talon_left_master.set(ControlMode.PercentOutput, _motor_power);
+        _talon_right_master.set(ControlMode.PercentOutput, _motor_power);
+    }
+
+    MiniPID _turning_loop = new MiniPID(.042,0.001,.32);
+    int _cycles_still = 0;
+    public boolean turnToAngle(double setpoint){
+        _motor_power = _turning_loop.getOutput(_navx.getAngle(),setpoint) * .65;
+
+        if(_navx.getAngle() > setpoint - 0.6 && _navx.getAngle() < setpoint + 0.6){
+            _motor_power = 0;
+            _cycles_still++;
+        
+        }else{
+            _cycles_still = 0;
+        }
+
+        _talon_left_master.set(ControlMode.PercentOutput, _motor_power);
+        _talon_right_master.set(ControlMode.PercentOutput, -_motor_power);
+        //System.out.println(_motor_power);
+
+        if(_cycles_still == 5){
+            return true;
+        }
+        return false;
+        
     }
 }
