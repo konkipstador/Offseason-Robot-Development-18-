@@ -1,0 +1,25 @@
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\Thin Dashboard.exe.config
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\Thin Dashboard.exe
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\Thin Dashboard.pdb
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\obj\Debug\Thin Dashboard.csprojResolveAssemblyReference.cache
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\obj\Debug\Thin_Dashboard.Form1.resources
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\obj\Debug\Thin_Dashboard.Properties.Resources.resources
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\obj\Debug\Thin Dashboard.csproj.GenerateResource.cache
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\obj\Debug\Thin Dashboard.csproj.CoreCompileInputs.cache
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\obj\Debug\Thin Dashboard.exe
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\obj\Debug\Thin Dashboard.pdb
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\FRC.NetworkTables.Core.DesktopLibraries.dll
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\MjpegProcessor.dll
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\obj\Debug\Thin Dashboard.csproj.CopyComplete
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\FRC.NetworkTables.dll
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.AsyncEx.Context.dll
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.AsyncEx.Coordination.dll
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.AsyncEx.Tasks.dll
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.Collections.Deque.dll
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.Disposables.dll
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\FRC.NetworkTables.xml
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.AsyncEx.Context.xml
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.AsyncEx.Coordination.xml
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.AsyncEx.Tasks.xml
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.Collections.Deque.xml
+C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.Disposables.xml
