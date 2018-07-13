@@ -1,10 +1,24 @@
 <?xml version="1.0" standalone="yes"?>
 <ThinDash_Save_File>
   <Object>
-    <type>tl</type>
+    <type>df</type>
     <x>30</x>
-    <y>30</y>
+    <y>100</y>
+    <size>1</size>
+    <info>test</info>
+  </Object>
+  <Object>
+    <type>cs</type>
+    <x>317</x>
+    <y>100</y>
+    <size>1</size>
+    <info>/</info>
+  </Object>
+  <Object>
+    <type>tl</type>
+    <x>94</x>
+    <y>224</y>
     <size>0</size>
-    <info>text</info>
+    <info>/</info>
   </Object>
 </ThinDash_Save_File>

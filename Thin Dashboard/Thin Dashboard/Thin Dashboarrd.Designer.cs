@@ -147,7 +147,7 @@
             this.labelToolStripMenuItem,
             this.radioButtonsToolStripMenuItem});
             this.addToolStripMenuItem.Name = "addToolStripMenuItem";
-            this.addToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.addToolStripMenuItem.Size = new System.Drawing.Size(121, 22);
             this.addToolStripMenuItem.Text = "Add";
             // 
             // cameraStreamViewerToolStripMenuItem
@@ -180,7 +180,7 @@
             // set_team
             // 
             this.set_team.Name = "set_team";
-            this.set_team.Size = new System.Drawing.Size(180, 22);
+            this.set_team.Size = new System.Drawing.Size(121, 22);
             this.set_team.Text = "Set Team";
             this.set_team.Click += new System.EventHandler(this.set_team_number);
             // 

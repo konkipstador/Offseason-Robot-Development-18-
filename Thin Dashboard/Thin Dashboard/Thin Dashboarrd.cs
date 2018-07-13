@@ -24,10 +24,8 @@ namespace Thin_Dashboard
     */ 
     public partial class Form1 : Form
     {
-        // These lists house all wrapper classes for GUI objects with custom features.
-        List<CameraStream> m_cameras = new List<CameraStream>();    // Camera Streams
-        List<DataField> m_readouts = new List<DataField>();         // Data Readouts
-        List<ThinLabel> m_labels = new List<ThinLabel>();           // GUI Labels
+        // This list house all wrapper classes for GUI objects with custom features.
+        List<Control> m_controls = new List<Control>();
 
         // NetworkTables related objects
         NetworkTable m_robot_network;
@@ -47,7 +45,6 @@ namespace Thin_Dashboard
         public Form1()
         {
             InitializeComponent();
-
             // Aquire team number from 
             m_team_number = get_team(@"C:\Users\Public\tb_data.txt");
             team_out.Text = m_team_number;
@@ -70,22 +67,23 @@ namespace Thin_Dashboard
         // Generate new CameraStream
         private void create_camera_stream(object sender, EventArgs e)
         {
-            m_cameras.Add(new CameraStream(30+30* m_cameras.Count, 30,1));
-            this.Controls.Add(m_cameras[m_cameras.Count-1].getStream());
+
+            m_controls.Add(new CameraStream(30+30* m_controls.Count, 30,1,"/"));
+            this.Controls.Add(m_controls[m_controls.Count-1]);
         }
 
         // Generate new Label
         private void create_new_label(object sender, EventArgs e)
         {
-            m_labels.Add(new ThinLabel(30+ 30 * m_labels.Count, 100));
-            this.Controls.Add(m_labels[m_labels.Count - 1].getLabel());
+            m_controls.Add(new DashboardLabel(30+ 30 * m_controls.Count, 100,""));
+            this.Controls.Add(m_controls[m_controls.Count - 1]);
         }
 
         // Generate new data field
         private void create_new_data_readout(object sender, EventArgs e)
         {
-            m_readouts.Add(new DataField(30 + 30 * m_readouts.Count,100, m_robot_network));
-            this.Controls.Add(m_readouts[m_readouts.Count - 1].getReadout());
+            m_controls.Add(new DataField(30 + 30 * m_controls.Count,100, m_robot_network,""));
+            this.Controls.Add(m_controls[m_controls.Count - 1]);
         }
 
         // Saves the current dashboard as the default in XML
@@ -108,11 +106,15 @@ namespace Thin_Dashboard
         // Resets the thread and updates all objects requiring NetworkTables
         private void network_thread(object sender, RunWorkerCompletedEventArgs e)
         {
-            if(m_readouts.Count != 0)
+            if(m_controls.Count != 0)
             {
-                foreach (DataField element in m_readouts)
+                foreach (ThinControlInterface element in m_controls)
                 {
-                    element.update();
+                    if (element.getAlive() && element.getUsesNetTables())
+                    {
+                        element.update();
+                    }
+                    
                 }
             }
             m_network_thread.RunWorkerAsync();
@@ -124,9 +126,7 @@ namespace Thin_Dashboard
             m_team_number = m_user_prompt.ShowDialog("Enter Team #", "Thin Dashboard");
             File.WriteAllText(@"C:\Users\Public\tb_data.txt", m_team_number);
             team_out.Text = m_team_number.ToString();
-            NetworkTable.SetClientMode();
-            NetworkTable.SetTeam(Convert.ToInt32(m_team_number));
-            NetworkTable.Initialize();
+            Application.Restart();
         }
 
        /** 
@@ -158,21 +158,20 @@ namespace Thin_Dashboard
                 {
                     if ((String)row[0] == "cs")
                     {
-                        m_cameras.Add(new CameraStream(Convert.ToInt32(row[1]), Convert.ToInt32(row[2]), Convert.ToDouble(row[3])));
-                        this.Controls.Add(m_cameras[m_cameras.Count - 1].getStream());
-                        m_cameras[m_cameras.Count - 1].setStream(Convert.ToString(row[4]));
+                        m_controls.Add(new CameraStream(Convert.ToInt32(row[1]), Convert.ToInt32(row[2]), Convert.ToDouble(row[3]), Convert.ToString(row[4])));
+                        this.Controls.Add(m_controls[m_controls.Count - 1]);
                     }
 
                     if ((String)row[0] == "tl")
                     {
-                        m_labels.Add(new ThinLabel(Convert.ToInt32(row[1]), Convert.ToInt32(row[2]), Convert.ToString(row[4])));
-                        this.Controls.Add(m_labels[m_labels.Count - 1].getLabel());
+                        m_controls.Add(new DashboardLabel(Convert.ToInt32(row[1]), Convert.ToInt32(row[2]), Convert.ToString(row[4])));
+                        this.Controls.Add(m_controls[m_controls.Count - 1]);
                     }
 
                     if ((String)row[0] == "df")
                     {
-                        m_readouts.Add(new DataField(Convert.ToInt32(row[1]), Convert.ToInt32(row[2]), m_robot_network, Convert.ToString(row[4])));
-                        this.Controls.Add(m_readouts[m_readouts.Count - 1].getReadout());
+                        m_controls.Add(new DataField(Convert.ToInt32(row[1]), Convert.ToInt32(row[2]), m_robot_network, Convert.ToString(row[4])));
+                        this.Controls.Add(m_controls[m_controls.Count - 1]);
                     }
                 }
             }
@@ -195,10 +194,10 @@ namespace Thin_Dashboard
             m_save_data.Columns.Add(new DataColumn("info", Type.GetType("System.String")));
 
 
-            // Creates rows from CamStream objects
-            foreach (CameraStream element in m_cameras)
+            // Creates rows from TCI objects
+            foreach (ThinControlInterface element in m_controls)
             {
-                if (element.getAlive())
+                if (element.getAlive() && element.getType().Equals("cs"))
                 {
                     DataRow row = m_save_data.NewRow();
                     row[0] = "cs";
@@ -208,11 +207,8 @@ namespace Thin_Dashboard
                     row[4] = element.getInfo();
                     m_save_data.Rows.Add(row);
                 }
-            }
 
-            foreach (DataField element in m_readouts)
-            {
-                if (element.getAlive())
+                if (element.getAlive() && element.getType().Equals("df"))
                 {
                     DataRow row = m_save_data.NewRow();
                     row[0] = "df";
@@ -222,11 +218,8 @@ namespace Thin_Dashboard
                     row[4] = element.getInfo();
                     m_save_data.Rows.Add(row);
                 }
-            }
 
-            foreach (ThinLabel element in m_labels)
-            {
-                if (element.getAlive())
+                if (element.getAlive() && element.getType().Equals("tl"))
                 {
                     DataRow row = m_save_data.NewRow();
                     row[0] = "tl";

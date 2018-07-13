@@ -23,3 +23,28 @@ C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.AsyncEx
 C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.AsyncEx.Tasks.xml
 C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.Collections.Deque.xml
 C:\Users\cnssc\source\repos\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.Disposables.xml
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\bin\Debug\Thin Dashboard.exe.config
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\bin\Debug\Thin Dashboard.exe
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\bin\Debug\Thin Dashboard.pdb
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\bin\Debug\FRC.NetworkTables.Core.DesktopLibraries.dll
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\bin\Debug\FRC.NetworkTables.dll
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\bin\Debug\MjpegProcessor.dll
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.AsyncEx.Context.dll
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.AsyncEx.Coordination.dll
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.AsyncEx.Tasks.dll
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.Collections.Deque.dll
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.Disposables.dll
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\bin\Debug\FRC.NetworkTables.xml
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.AsyncEx.Context.xml
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.AsyncEx.Coordination.xml
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.AsyncEx.Tasks.xml
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.Collections.Deque.xml
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\bin\Debug\Nito.Disposables.xml
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\obj\Debug\Thin Dashboard.csprojResolveAssemblyReference.cache
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\obj\Debug\Thin_Dashboard.Form1.resources
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\obj\Debug\Thin_Dashboard.Properties.Resources.resources
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\obj\Debug\Thin Dashboard.csproj.GenerateResource.cache
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\obj\Debug\Thin Dashboard.csproj.CoreCompileInputs.cache
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\obj\Debug\Thin Dashboard.csproj.CopyComplete
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\obj\Debug\Thin Dashboard.exe
+D:\Offseason-Robot-Development-18-\Thin Dashboard\Thin Dashboard\obj\Debug\Thin Dashboard.pdb
