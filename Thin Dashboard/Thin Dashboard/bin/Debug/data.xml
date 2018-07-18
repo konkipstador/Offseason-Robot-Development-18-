@@ -12,7 +12,7 @@
     <x>317</x>
     <y>100</y>
     <size>1</size>
-    <info>/</info>
+    <info>http://192.168.0.105:8000/camera/mjpeg</info>
   </Object>
   <Object>
     <type>tl</type>

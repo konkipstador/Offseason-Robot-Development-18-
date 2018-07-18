@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using Thin_Dashboard.UI_Objects;
+using Thin_Dashboard.UI_Objects.Objects;
 
 namespace Thin_Dashboard
 {
@@ -49,10 +50,23 @@ namespace Thin_Dashboard
             m_team_number = get_team(@"C:\Users\Public\tb_data.txt");
             team_out.Text = m_team_number;
 
-            NetworkTable.SetClientMode();
-            NetworkTable.SetTeam(Convert.ToInt32(m_team_number));
-            NetworkTable.Initialize();
-            m_robot_network = NetworkTable.GetTable("Thin_Dashboard");
+            try
+            {
+
+                NetworkTable.SetClientMode();
+                NetworkTable.SetTeam(Convert.ToInt32(m_team_number));
+                NetworkTable.Initialize();
+                m_robot_network = NetworkTable.GetTable("Thin_Dashboard");
+            }
+            catch
+            {
+                NetworkTable.SetClientMode();
+                NetworkTable.SetTeam(957);
+                NetworkTable.Initialize();
+                m_robot_network = NetworkTable.GetTable("Thin_Dashboard");
+            }
+
+            
 
             // Configure and start thread and timer managing NetworkTables
             m_network_timer.Start();
@@ -83,6 +97,12 @@ namespace Thin_Dashboard
         private void create_new_data_readout(object sender, EventArgs e)
         {
             m_controls.Add(new DataField(30 + 30 * m_controls.Count,100, m_robot_network,""));
+            this.Controls.Add(m_controls[m_controls.Count - 1]);
+        }
+
+        private void add_radio_buttons(object sender, EventArgs e)
+        {
+            m_controls.Add(new Selector(30 + 30 * m_controls.Count, 100, m_robot_network, ""));
             this.Controls.Add(m_controls[m_controls.Count - 1]);
         }
 
@@ -246,5 +266,6 @@ namespace Thin_Dashboard
 
             return m_team_number.ToString();
         }
+
     }
 }

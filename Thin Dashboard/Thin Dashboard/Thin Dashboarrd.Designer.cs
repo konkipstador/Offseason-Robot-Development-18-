@@ -78,25 +78,25 @@
             // newToolStripMenuItem
             // 
             this.newToolStripMenuItem.Name = "newToolStripMenuItem";
-            this.newToolStripMenuItem.Size = new System.Drawing.Size(150, 22);
+            this.newToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.newToolStripMenuItem.Text = "New";
             // 
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(150, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.openToolStripMenuItem.Text = "Open";
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(150, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.saveToolStripMenuItem.Text = "Save";
             // 
             // saveAsDefaultToolStripMenuItem
             // 
             this.saveAsDefaultToolStripMenuItem.Name = "saveAsDefaultToolStripMenuItem";
-            this.saveAsDefaultToolStripMenuItem.Size = new System.Drawing.Size(150, 22);
+            this.saveAsDefaultToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.saveAsDefaultToolStripMenuItem.Text = "Save as Default";
             this.saveAsDefaultToolStripMenuItem.Click += new System.EventHandler(this.save_as_default);
             // 
@@ -147,7 +147,7 @@
             this.labelToolStripMenuItem,
             this.radioButtonsToolStripMenuItem});
             this.addToolStripMenuItem.Name = "addToolStripMenuItem";
-            this.addToolStripMenuItem.Size = new System.Drawing.Size(121, 22);
+            this.addToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.addToolStripMenuItem.Text = "Add";
             // 
             // cameraStreamViewerToolStripMenuItem
@@ -176,11 +176,12 @@
             this.radioButtonsToolStripMenuItem.Name = "radioButtonsToolStripMenuItem";
             this.radioButtonsToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
             this.radioButtonsToolStripMenuItem.Text = "Radio Buttons";
+            this.radioButtonsToolStripMenuItem.Click += new System.EventHandler(this.add_radio_buttons);
             // 
             // set_team
             // 
             this.set_team.Name = "set_team";
-            this.set_team.Size = new System.Drawing.Size(121, 22);
+            this.set_team.Size = new System.Drawing.Size(180, 22);
             this.set_team.Text = "Set Team";
             this.set_team.Click += new System.EventHandler(this.set_team_number);
             // 
