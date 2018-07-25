@@ -45,6 +45,7 @@
             this.labelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.radioButtonsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.set_team = new System.Windows.Forms.ToolStripMenuItem();
+            this.edit_tool = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.team_out = new System.Windows.Forms.ToolStripLabel();
             ((System.ComponentModel.ISupportInitialize)(this.navigation_bar)).BeginInit();
@@ -78,30 +79,31 @@
             // newToolStripMenuItem
             // 
             this.newToolStripMenuItem.Name = "newToolStripMenuItem";
-            this.newToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.newToolStripMenuItem.Size = new System.Drawing.Size(150, 22);
             this.newToolStripMenuItem.Text = "New";
             // 
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(150, 22);
             this.openToolStripMenuItem.Text = "Open";
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(150, 22);
             this.saveToolStripMenuItem.Text = "Save";
             // 
             // saveAsDefaultToolStripMenuItem
             // 
             this.saveAsDefaultToolStripMenuItem.Name = "saveAsDefaultToolStripMenuItem";
-            this.saveAsDefaultToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveAsDefaultToolStripMenuItem.Size = new System.Drawing.Size(150, 22);
             this.saveAsDefaultToolStripMenuItem.Text = "Save as Default";
             this.saveAsDefaultToolStripMenuItem.Click += new System.EventHandler(this.save_as_default);
             // 
             // toolbar
             // 
+            this.toolbar.BackColor = System.Drawing.Color.White;
             this.toolbar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolbar_file,
             this.toolStripLabel1,
@@ -130,7 +132,8 @@
             this.toolbar_edit.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.toolbar_edit.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.addToolStripMenuItem,
-            this.set_team});
+            this.set_team,
+            this.edit_tool});
             this.toolbar_edit.Font = new System.Drawing.Font("HP Simplified", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.toolbar_edit.Image = ((System.Drawing.Image)(resources.GetObject("toolbar_edit.Image")));
             this.toolbar_edit.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -185,6 +188,14 @@
             this.set_team.Text = "Set Team";
             this.set_team.Click += new System.EventHandler(this.set_team_number);
             // 
+            // edit_tool
+            // 
+            this.edit_tool.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
+            this.edit_tool.Name = "edit_tool";
+            this.edit_tool.Size = new System.Drawing.Size(180, 22);
+            this.edit_tool.Text = "Enable Edit Mode";
+            this.edit_tool.Click += new System.EventHandler(this.editModeClicked);
+            // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
@@ -201,6 +212,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.Color.Gainsboro;
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.toolbar);
             this.Controls.Add(this.navigation_bar);
@@ -234,5 +246,6 @@
         private System.Windows.Forms.ToolStripMenuItem saveAsDefaultToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem set_team;
         private System.Windows.Forms.ToolStripLabel team_out;
+        private System.Windows.Forms.ToolStripMenuItem edit_tool;
     }
 }

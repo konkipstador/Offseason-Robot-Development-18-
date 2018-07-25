@@ -19,6 +19,8 @@ namespace Thin_Dashboard.UI_Objects
         private Point m_previousLocation;
         Cursor m_cursor;
 
+        protected Boolean CanEdit = false;
+
         // Constructor
         public ThinControl()
         {
@@ -34,9 +36,12 @@ namespace Thin_Dashboard.UI_Objects
             if (m_activeControl == null || m_activeControl != sender)
                 return;
 
-            var location = m_activeControl.Location;
-            location.Offset(e.Location.X - m_previousLocation.X, e.Location.Y - m_previousLocation.Y);
-            m_activeControl.Location = location;
+            if (CanEdit)
+            {
+                var location = m_activeControl.Location;
+                location.Offset(e.Location.X - m_previousLocation.X, e.Location.Y - m_previousLocation.Y);
+                m_activeControl.Location = location;
+            }
         }
 
         // Checks if the mouse is not clicked

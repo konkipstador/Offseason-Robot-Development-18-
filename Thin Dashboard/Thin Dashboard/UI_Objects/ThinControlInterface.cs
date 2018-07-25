@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NetworkTables;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,13 +9,12 @@ namespace Thin_Dashboard.UI_Objects
 {
     interface ThinControlInterface
     {
-        void update();
+        void update(NetworkTable table, Boolean edit_mode);
         String getType();
         Boolean getAlive();
         int getX();
         int getY();
         Double getSize();
         String getInfo();
-        Boolean getUsesNetTables();
     }
 }

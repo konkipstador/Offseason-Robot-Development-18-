@@ -43,8 +43,15 @@ namespace Thin_Dashboard
         // Team number string
         String m_team_number = "1";
 
+        // Decal Image
+        String m_image_filename = @"C:\Users\Public\decal.png";
+        PictureBox m_decal = new PictureBox();
+
+        Boolean m_edit = false;
+
         public Form1()
         {
+
             InitializeComponent();
             // Aquire team number from 
             m_team_number = get_team(@"C:\Users\Public\tb_data.txt");
@@ -76,6 +83,23 @@ namespace Thin_Dashboard
 
             // Load default save if save file exists
             load_from_xml("data.xml");
+
+            // Load image decal
+            
+            this.Controls.Add(m_decal);
+            m_decal.Show();
+            m_decal.Size = new Size(1000, 1000);
+            m_decal.Location = new Point(-200,-500);
+            m_decal.Image = Image.FromFile(m_image_filename, true);
+            m_decal.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            m_decal.SendToBack();
+
+            this.Layout += Form1_Layout;
+        }
+
+        private void Form1_Layout(object sender, LayoutEventArgs e)
+        {
+            m_decal.SendToBack();
         }
 
         // Generate new CameraStream
@@ -102,7 +126,7 @@ namespace Thin_Dashboard
 
         private void add_radio_buttons(object sender, EventArgs e)
         {
-            m_controls.Add(new Selector(30 + 30 * m_controls.Count, 100, m_robot_network, ""));
+            m_controls.Add(new Selector(30 + 30 * m_controls.Count, 100,""));
             this.Controls.Add(m_controls[m_controls.Count - 1]);
         }
 
@@ -130,9 +154,9 @@ namespace Thin_Dashboard
             {
                 foreach (ThinControlInterface element in m_controls)
                 {
-                    if (element.getAlive() && element.getUsesNetTables())
+                    if (element.getAlive())
                     {
-                        element.update();
+                        element.update(m_robot_network, m_edit);
                     }
                     
                 }
@@ -193,6 +217,12 @@ namespace Thin_Dashboard
                         m_controls.Add(new DataField(Convert.ToInt32(row[1]), Convert.ToInt32(row[2]), m_robot_network, Convert.ToString(row[4])));
                         this.Controls.Add(m_controls[m_controls.Count - 1]);
                     }
+
+                    if ((String)row[0] == "s")
+                    {
+                        m_controls.Add(new Selector(Convert.ToInt32(row[1]), Convert.ToInt32(row[2]), Convert.ToString(row[4])));
+                        this.Controls.Add(m_controls[m_controls.Count - 1]);
+                    }
                 }
             }
         }
@@ -249,6 +279,17 @@ namespace Thin_Dashboard
                     row[4] = element.getInfo();
                     m_save_data.Rows.Add(row);
                 }
+
+                if (element.getAlive() && element.getType().Equals("s"))
+                {
+                    DataRow row = m_save_data.NewRow();
+                    row[0] = "s";
+                    row[1] = element.getX();
+                    row[2] = element.getY();
+                    row[3] = element.getSize();
+                    row[4] = element.getInfo();
+                    m_save_data.Rows.Add(row);
+                }
             }
 
             m_save_data.TableName = "Object";
@@ -267,5 +308,20 @@ namespace Thin_Dashboard
             return m_team_number.ToString();
         }
 
+        private void editModeClicked(object sender, EventArgs e)
+        {
+            if (m_edit == false)
+            {
+                m_edit = true;
+                edit_tool.Text = "Disable Edit Mode";
+                edit_tool.BackColor = Color.FromArgb(192, 255, 192);
+            }
+            else
+            {  
+                m_edit = false;
+                edit_tool.Text = "Enable Edit Mode";
+                edit_tool.BackColor = Color.FromArgb(255, 192, 192);
+            }
+        }
     }
 }

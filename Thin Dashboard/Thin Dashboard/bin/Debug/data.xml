@@ -1,24 +1,10 @@
 <?xml version="1.0" standalone="yes"?>
 <ThinDash_Save_File>
   <Object>
-    <type>df</type>
-    <x>30</x>
-    <y>100</y>
+    <type>s</type>
+    <x>13</x>
+    <y>31</y>
     <size>1</size>
-    <info>test</info>
-  </Object>
-  <Object>
-    <type>cs</type>
-    <x>317</x>
-    <y>100</y>
-    <size>1</size>
-    <info>http://192.168.0.105:8000/camera/mjpeg</info>
-  </Object>
-  <Object>
-    <type>tl</type>
-    <x>94</x>
-    <y>224</y>
-    <size>0</size>
-    <info>/</info>
+    <info>Autonomus Mode</info>
   </Object>
 </ThinDash_Save_File>
