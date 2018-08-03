@@ -90,7 +90,11 @@ namespace Thin_Dashboard
             m_decal.Show();
             m_decal.Size = new Size(1000, 1000);
             m_decal.Location = new Point(-200,-500);
-            m_decal.Image = Image.FromFile(m_image_filename, true);
+            try
+            {
+                m_decal.Image = Image.FromFile(m_image_filename, true);
+            }
+            catch { }      
             m_decal.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             m_decal.SendToBack();
 
