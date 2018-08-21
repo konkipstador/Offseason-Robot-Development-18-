@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -22,6 +23,7 @@ namespace Thin_Dashboard.UI_Objects
         private ContextMenu m_context_menu = new ContextMenu();
         private MenuItem m_url_menu = new MenuItem("URL");       // Menu option to change Mjpeg stream URL
         private MenuItem m_delete_menu = new MenuItem("Delete"); // Menu option to delete this CameraStream
+        private MenuItem m_scale_menu = new MenuItem("Set Scalar"); // Menu option to delete this CameraStream
 
         // Classwide prompt used to ask for user input.
         private Prompt prompt = new Prompt();
@@ -29,12 +31,15 @@ namespace Thin_Dashboard.UI_Objects
         String m_url = "";
         Boolean m_alive = true;
 
-        double m_size = 0;
-    
+        double m_size = 1;
+
+        Boolean m_server_up = true;
+
         public CameraStream(int x, int y, double size, String URL)
         {
             // Finish constructing the stream object and PictureBox
             m_mjpeg_stream = new MjpegDecoder();
+
             this.BringToFront();
 
             // Defining UI charactaristics of the PictureBox
@@ -45,12 +50,14 @@ namespace Thin_Dashboard.UI_Objects
             // Adds menu items into the Context Menu 
             m_context_menu.MenuItems.Add(m_url_menu);
             m_context_menu.MenuItems.Add(m_delete_menu);
+            m_context_menu.MenuItems.Add(m_scale_menu);
 
             // Add event handlers
             m_mjpeg_stream.FrameReady += mjpeg_stream_FrameReady;   // Outputs the current Mjpeg frame into the PictureBox
             this.MouseDown += mouseDown;    // Brings up the ContextMenu
             m_url_menu.Click += urlClick;   // Prompts the user to enter the Mjpeg stream URL
             m_delete_menu.Click += delete_stream;   // Removes the stream from the UI and raises ControlRemoved
+            m_scale_menu.Click += setScalar;   // 
 
             m_size = size;
             setStream(URL);
@@ -65,6 +72,13 @@ namespace Thin_Dashboard.UI_Objects
             
         }
 
+        private void setScalar(object sender, EventArgs e)
+        {
+            // Prompts the user for the new scalar value
+            m_size = Convert.ToDouble(prompt.ShowDialog("Enter Stream URL", "Thin Dashboard"));
+            this.Size = new Size(Convert.ToInt32(320 *m_size),Convert.ToInt32(240*m_size));
+        }
+
         private void setStream(String URL)
         {
             m_url = URL;
@@ -74,8 +88,7 @@ namespace Thin_Dashboard.UI_Objects
         // Outputs the Mjpeg into the PictureBox
         private void mjpeg_stream_FrameReady(object sender, FrameReadyEventArgs e)
         {
-            this.BackgroundImage = e.Bitmap;
-               
+            this.BackgroundImage = new Bitmap(e.Bitmap, this.Size);
         }
 
         // Brings up the context menu when the PictureBox is right clicked and enable dragging
@@ -116,7 +129,7 @@ namespace Thin_Dashboard.UI_Objects
 
         public double getSize()
         {
-            return 1;
+            return m_size;
         }
 
         public String getInfo()

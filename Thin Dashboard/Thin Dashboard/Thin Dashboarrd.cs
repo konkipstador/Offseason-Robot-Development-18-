@@ -56,7 +56,9 @@ namespace Thin_Dashboard
             // Aquire team number from 
             m_team_number = get_team(@"C:\Users\Public\tb_data.txt");
             team_out.Text = m_team_number;
-
+            this.TopMost = true;
+            this.FormBorderStyle = FormBorderStyle.None;
+            this.WindowState = FormWindowState.Maximized;
             try
             {
 
