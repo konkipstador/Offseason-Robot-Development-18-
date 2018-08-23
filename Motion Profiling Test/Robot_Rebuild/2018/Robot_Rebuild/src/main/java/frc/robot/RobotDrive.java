@@ -132,4 +132,8 @@ public class RobotDrive{
     public double getRightSpeed(){
         return m_rightMotor1.getMotorOutputPercent();
     }
+
+    public void centerGyro(){
+        m_navX.reset();
+    }
 }

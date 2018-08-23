@@ -7,17 +7,17 @@ public class AutoPaths{
 
     public static Waypoint[] centerToRightSwitchWaypoints = {
         new Waypoint(0,0,Pathfinder.d2r(90)),
-        new Waypoint(-30,30,Pathfinder.d2r(90))
+        new Waypoint(52,110,Pathfinder.d2r(90))
     };
 
     public static Waypoint[] rightSwitchToCenterWaypoints = {
         new Waypoint(0,0,Pathfinder.d2r(90)),
-        new Waypoint(-52,130,Pathfinder.d2r(90))
+        new Waypoint(-52,110,Pathfinder.d2r(90))
     };
 
     public static Waypoint[] centerToCubesWaypoints = {
         new Waypoint(0,0,Pathfinder.d2r(90)),
-        new Waypoint(0,91,Pathfinder.d2r(90))
+        new Waypoint(0,60,Pathfinder.d2r(90))
     };
 
     public static AdvWaypoint centerToRightSwitch = new AdvWaypoint(centerToRightSwitchWaypoints, false, 2,0,0,false);
