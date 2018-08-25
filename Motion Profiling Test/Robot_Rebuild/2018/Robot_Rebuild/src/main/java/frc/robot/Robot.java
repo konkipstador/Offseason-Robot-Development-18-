@@ -10,15 +10,10 @@ package frc.robot;
 import java.util.ArrayList;
 
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.SerialPort.Port;
-import frc.robot.AutoPaths.AdvWaypoint;
 import jaci.pathfinder.Pathfinder;
 import jaci.pathfinder.Trajectory;
 import jaci.pathfinder.followers.EncoderFollower;
-import jaci.pathfinder.modifiers.TankModifier;
-
 
 public class Robot extends TimedRobot {
 
@@ -33,7 +28,7 @@ public class Robot extends TimedRobot {
     double m_timeInManeuver;
     double m_totalTime = 0;
 
-    //SerialPort m_serialPort = new SerialPort(57600, Port.kUSB1);
+    PathGen m_pathGen = new PathGen(24.5, 3.94, 512);
 
     public void robotInit() {
         m_drivetrain.setTalonIDs(0,1,2,3,4,5);  // 0-2 are left motors, 3-5 are right motors
@@ -51,18 +46,11 @@ public class Robot extends TimedRobot {
         m_paths.add(AutoPaths.rightSwitchToCenter);
         m_paths.add(AutoPaths.centerToCube);
 
-        m_leftFollower = new ArrayList<EncoderFollower>();
-        m_rightFollower = new ArrayList<EncoderFollower>();
-        for (int i=0; i<m_paths.size(); i++) 
-        { 
-            m_leftFollower.add(new EncoderFollower((new TankModifier(Pathfinder.generate(m_paths.get(i).getWaypointArray(),m_trajectoryConfig)).modify(24.5)).getLeftTrajectory()));
-            m_leftFollower.get(i).configureEncoder(0,512,3.94);
-            m_leftFollower.get(i).configurePIDVA(0.1,0,0.01, 1/50,0);
-
-            m_rightFollower.add(new EncoderFollower((new TankModifier(Pathfinder.generate(m_paths.get(i).getWaypointArray(),m_trajectoryConfig)).modify(24.5)).getRightTrajectory()));
-            m_rightFollower.get(i).configureEncoder(0,512,3.94);
-            m_rightFollower.get(i).configurePIDVA(0.1,0,0.01, 1/50,0);
-        }
+        m_pathGen.generateFollowers(m_paths, m_trajectoryConfig);
+        
+        m_leftFollower = m_pathGen.getLeftFollower();
+        m_rightFollower = m_pathGen.getRightFollower();
+        
     }
 
     public void autonomousInit() {
@@ -108,7 +96,7 @@ public class Robot extends TimedRobot {
     public void autonomousPeriodic() {
 
         // Checks if the time spent delaying is equal to the delay value
-        if(m_timeInManeuver >= m_paths.get(m_pathNumber).m_delay && !m_leftFollower.get(m_pathNumber).isFinished()){
+        if(m_timeInManeuver >= m_paths.get(m_pathNumber).getDelay() && !m_leftFollower.get(m_pathNumber).isFinished()){
             
             // Flips the encoder input and final output if the path is set to be inverted
             if(m_paths.get(m_pathNumber).isInverted()){
@@ -124,8 +112,6 @@ public class Robot extends TimedRobot {
             double desiredHeading = Pathfinder.r2d(m_leftFollower.get(m_pathNumber).getHeading());
             double angleDifference = Pathfinder.boundHalfDegrees(desiredHeading - gyroHeading);
             double turn = 0.8 * (-1/50) * angleDifference;
-            
-
 
             m_drivetrain.drive(leftOutput - turn, rightOutput + turn);
             System.out.println(m_drivetrain.getHeading());
@@ -141,7 +127,7 @@ public class Robot extends TimedRobot {
                 finishedTime = 0;
                 m_drivetrain.stop();
                 m_drivetrain.resetEncoders();
-                if(m_paths.get(m_pathNumber).shouldLiftRaiseBeforeDelay() && !m_liftCommandSent){
+                if(m_paths.get(m_pathNumber).getShouldLiftRaiseBeforeDelay() && !m_liftCommandSent){
                     m_liftCommandSent = true;
                     // TODO Program lift code
                 
@@ -167,15 +153,6 @@ public class Robot extends TimedRobot {
 
     public void teleopPeriodic() {
         m_drivetrain.drive(-m_dualshock.getRawAxis(1),-m_dualshock.getRawAxis(5));    // Tank drive
-    }
-
-    public void robotPeriodic() {
-
-
-    }
-
-    public void loadNextManeuver(){
-        
     }
 
 }
