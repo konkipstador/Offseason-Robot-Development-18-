@@ -14,10 +14,13 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import jaci.pathfinder.Pathfinder;
 import jaci.pathfinder.Trajectory;
 import jaci.pathfinder.followers.EncoderFollower;
+import frc.pathing.*;
+import frc.robot.Elevator;
 
 public class Robot extends TimedRobot {
 
     RobotDrive m_drivetrain = RobotDrive.getInstance();
+    Elevator m_elevator = Elevator.getInstance();
     Joystick m_dualshock = new Joystick(0);
 
     ArrayList<AdvWaypoint> m_paths;
@@ -46,10 +49,11 @@ public class Robot extends TimedRobot {
         m_paths.add(AutoPaths.rightSwitchToCenter);
         m_paths.add(AutoPaths.centerToCube);
 
+        m_pathGen.setPD(0.1, 0.01);
         m_pathGen.generateFollowers(m_paths, m_trajectoryConfig);
         
-        m_leftFollower = m_pathGen.getLeftFollower();
-        m_rightFollower = m_pathGen.getRightFollower();
+        m_leftFollower = m_pathGen.getLeftFollowers();
+        m_rightFollower = m_pathGen.getRightFollowers();
         
     }
 
@@ -118,19 +122,16 @@ public class Robot extends TimedRobot {
 
             if(!m_liftCommandSent){
                 m_liftCommandSent = true;
-                // TODO Program lift code
+                m_elevator.setLevel(m_paths.get(m_pathNumber).getLiftPosition());
             }
             finishedTime = 0;
         }else{
-            
-
                 finishedTime = 0;
                 m_drivetrain.stop();
                 m_drivetrain.resetEncoders();
                 if(m_paths.get(m_pathNumber).getShouldLiftRaiseBeforeDelay() && !m_liftCommandSent){
                     m_liftCommandSent = true;
-                    // TODO Program lift code
-                
+                    m_elevator.setLevel(m_paths.get(m_pathNumber).getLiftPosition());             
             }    
         }
 
@@ -153,6 +154,10 @@ public class Robot extends TimedRobot {
 
     public void teleopPeriodic() {
         m_drivetrain.drive(-m_dualshock.getRawAxis(1),-m_dualshock.getRawAxis(5));    // Tank drive
+    }
+
+    public void disabledPeriodic(){
+        m_elevator.disable();
     }
 
 }

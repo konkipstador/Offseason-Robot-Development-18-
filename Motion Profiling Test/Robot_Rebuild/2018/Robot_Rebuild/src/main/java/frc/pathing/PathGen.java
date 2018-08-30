@@ -1,4 +1,4 @@
-package frc.robot;
+package frc.pathing;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,26 +25,58 @@ public class PathGen{
     private double m_kp = 0.1;
     private double m_kd = 0.01;
 
+    /**
+     * Class constructor.
+     * 
+     * @param wheelbase             Distance between the wheels of the robot
+     * @param wheelDiameter         Diameter of the robot's wheels
+     * @param ticksPerRevolution    The number of ticks it takes the encoder to equal a full revolution 
+     */
     public PathGen(double wheelbase, double wheelDiameter, int ticksPerRevolution){
         m_wheelbase = wheelbase;
         m_wheelDiameter = wheelDiameter;
         m_ticksPerRevolution = ticksPerRevolution;
     }
 
-    // This generates Encoder followers off of a single Trajectory Configuration, making it useful for simple paths.
+    /**
+     * Sets the P and D values of the control loop
+     * 
+     * @param kp    Proportional gain value
+     * @param kd    Differental gain value
+     */
+    public void setPD(double kp, double kd){
+        m_kp = kp;
+        m_kd = kd;
+    }
+
+    /**
+     * Generates Pathfinder's Encoder Followers, which contain path following data
+     * 
+     * @param paths             An arraylist which used to hold path waypoints
+     * @param trajectoryConfig  An object which sets the max velocity, acceleration, and jerk of a maneuver
+     */
     public void generateFollowers(ArrayList<AdvWaypoint> paths, Trajectory.Config trajectoryConfig){
         ArrayList<Trajectory.Config> trajectoryConfigs = new ArrayList<Trajectory.Config>();
         trajectoryConfigs.addAll(Collections.nCopies(paths.size(), trajectoryConfig));
-        generateEF(paths, trajectoryConfigs);
+        generateFollowers(paths, trajectoryConfigs);
     }
 
-    // This generates EncoderFollowers off of a list of Trajectory Configurations, allowing for greater path complexity.
-    public void generateFollowers(ArrayList<AdvWaypoint> paths, ArrayList<Trajectory.Config> trajectoryConfigs){
-        generateEF(paths, trajectoryConfigs);
-    }
+    /**
+     * Generates Pathfinder's Encoder Followers, which contain path following data
+     * 
+     * @param paths             An arraylist which used to hold path waypoints
+     * @param trajectoryConfigs An arraylist containing a trajectory configuration for each path in paths, allowing for each maneuver to have different max values
+     * @throws NullPointerException This exception is thrown when the size of paths and trajectoryConfigs don't match
+     */
+    private void generateFollowers(ArrayList<AdvWaypoint> paths, ArrayList<Trajectory.Config> trajectoryConfigs){
 
-    // Does the generation for the two classes above.
-    private void generateEF(ArrayList<AdvWaypoint> paths, ArrayList<Trajectory.Config> trajectoryConfigs){
+        m_leftFollower = new ArrayList<EncoderFollower>();
+        m_rightFollower = new ArrayList<EncoderFollower>();
+
+        if(paths.size() != trajectoryConfigs.size()){
+            throw new NullPointerException();
+        }
+
         for (int i=0; i<paths.size(); i++) 
         { 
             m_leftFollower.add(new EncoderFollower((new TankModifier(Pathfinder.generate(paths.get(i).getWaypointArray(),trajectoryConfigs.get(i))).modify(m_wheelbase)).getLeftTrajectory()));
@@ -57,11 +89,11 @@ public class PathGen{
         }
     }
 
-    public ArrayList<EncoderFollower> getRightFollower(){
+    public ArrayList<EncoderFollower> getRightFollowers(){
         return m_rightFollower;
     }
 
-    public ArrayList<EncoderFollower> getLeftFollower(){
+    public ArrayList<EncoderFollower> getLeftFollowers(){
         return m_leftFollower;
     }
 }

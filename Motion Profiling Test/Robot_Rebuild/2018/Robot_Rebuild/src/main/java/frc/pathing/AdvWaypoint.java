@@ -1,6 +1,7 @@
-package frc.robot;
+package frc.pathing;
 
 import jaci.pathfinder.Waypoint;
+import frc.robot.Elevator.LiftLevels;
 
 /**
  * The Advanced Waypoint class wraps all data for autonomus robot control into a
@@ -16,7 +17,7 @@ public class AdvWaypoint{
 
     private Waypoint m_targetWaypoints[] = null;
     private Boolean m_isPathInverted = null;
-    private int m_liftPositionAtStart = 0;
+    private LiftLevels m_liftPositionAtStart = LiftLevels.GROUND;
     private double m_intakeSpeed = 0;
     private double m_delay = 0;
     private boolean m_shouldLiftRaiseBeforeDelay = false;
@@ -30,7 +31,7 @@ public class AdvWaypoint{
      * @param delay         The amount of time the robot should delay before moving in seconds
      * @param shouldLiftRaiseBeforeDelay     Tells the control loop if the elevator should move before or after the delay 
      */
-    public AdvWaypoint(Waypoint waypoints[], Boolean isInverted, int liftPosition, double intakeSpeed, double delay, Boolean shouldLiftRaiseBeforeDelay){
+    public AdvWaypoint(Waypoint waypoints[], Boolean isInverted, LiftLevels liftPosition, double intakeSpeed, double delay, Boolean shouldLiftRaiseBeforeDelay){
         m_targetWaypoints = waypoints;
         m_isPathInverted = isInverted;
         m_liftPositionAtStart = liftPosition;
@@ -47,7 +48,7 @@ public class AdvWaypoint{
         return m_isPathInverted;
     }
 
-    public int getLiftPosition(){
+    public LiftLevels getLiftPosition(){
         return m_liftPositionAtStart;
     }
 
