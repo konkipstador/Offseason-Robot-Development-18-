@@ -13,13 +13,14 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 */
 public class Elevator {
 	
-	private static Elevator m_elevatorSystem;
+	private static Elevator m_elevatorSystem;	// Synchronized Elevator object
 
 	TalonSRX m_elevator = new TalonSRX(6);
-	int m_targetPosition = 0;	
-	int m_currentPosition = 0;	
-	int currentLevel = 0;
-	boolean getCurrentPosition = true;
+	TalonSRX m_intakeMaster = new TalonSRX(7);	// Left intake motor
+	TalonSRX m_intakeSlave = new TalonSRX(8);	// Right intake motor
+
+	int m_targetPosition = 0;					// Target elevator position
+	boolean m_checkElevatorPosition = true;		// Used to check if moveGranularly should set the target position used by the formula to the elevator's target position
 	
 	/**
 	 * Initalizes all PIDF values and motion profiling fields associated with the
@@ -40,13 +41,16 @@ public class Elevator {
 		m_elevator.configMotionCruiseVelocity(2000,50);	// Max speed
 		m_elevator.configMotionAcceleration(2000, 50);	// Max acceleration
 		m_elevator.setSelectedSensorPosition(0, 0, 50);	// Zeroes the encoder
+
+		m_intakeSlave.setInverted(true);	// Sets the right intake motor to invert it's input
+		m_intakeSlave.set(ControlMode.Follower, 7);	// Sets the right intake motor to follow the left inake motor
 	}
 	
 	/**
 	 * Sets the target position of the elevator
 	 */
 	public void setLevel(LiftLevels level) {	
-		getCurrentPosition = true;
+		m_checkElevatorPosition = true;
 		m_targetPosition = level.encoderPosition();
 		m_elevator.set(ControlMode.MotionMagic, level.encoderPosition());
 	}
@@ -76,18 +80,25 @@ public class Elevator {
 	 * Moves the targeted elevator position by adjusting a joystick
 	 */
 	public void moveGranulary(double joystick){
-		if(getCurrentPosition) {
-			getCurrentPosition = false;
+		if(m_checkElevatorPosition) {
+			m_checkElevatorPosition = false;
 			m_targetPosition = m_elevator.getSelectedSensorPosition(0);
 		}
 	     m_targetPosition = (int) (m_targetPosition + (40 * joystick));
 	     if(m_targetPosition > LiftLevels.SCALEHIGH.encoderPosition()) {
-	    	 m_targetPosition = LiftLevels.SCALEHIGH.encoderPosition();
+	    	m_targetPosition = LiftLevels.SCALEHIGH.encoderPosition();
 	     }
 	     if(m_targetPosition < LiftLevels.GROUND.encoderPosition()) {
 	    	 m_targetPosition = LiftLevels.GROUND.encoderPosition();
 	     }
 	     m_elevator.set(ControlMode.MotionMagic, m_targetPosition);
+	}
+
+	/**
+	 * Sets the speed of the intake (-1 to 1)
+	 */
+	public void intakeSpeed(double power){
+		m_intakeMaster.set(ControlMode.PercentOutput, power);
 	}
 
 	/**
@@ -113,7 +124,7 @@ public class Elevator {
 	}
 
 	/**
-	 * Constructor for class syncrionization
+	 * Constructor for class synchronization
 	 */
 	public static synchronized Elevator getInstance(){
         if (m_elevatorSystem == null)

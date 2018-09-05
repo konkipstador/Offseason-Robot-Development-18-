@@ -14,8 +14,10 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import jaci.pathfinder.Pathfinder;
 import jaci.pathfinder.Trajectory;
 import jaci.pathfinder.followers.EncoderFollower;
-import frc.pathing.*;
+import frc.pathing.PathGen;
+import frc.pathing.AdvWaypoint;
 import frc.robot.Elevator;
+import frc.auto.*;
 
 public class Robot extends TimedRobot {
 
@@ -25,13 +27,16 @@ public class Robot extends TimedRobot {
 
     ArrayList<AdvWaypoint> m_paths;
     Trajectory.Config m_trajectoryConfig;
-    ArrayList<EncoderFollower> m_leftFollower = null;
-    ArrayList<EncoderFollower> m_rightFollower = null;   
+    ArrayList<EncoderFollower> m_leftFollowers = null;
+    ArrayList<EncoderFollower> m_rightFollowers = null;   
     int m_pathNumber = 0;
     double m_timeInManeuver;
+    double m_finishedTime = 0;
+    double m_leftOutput = 0;
+    double m_rightOutput = 0;
     double m_totalTime = 0;
-
-    PathGen m_pathGen = new PathGen(24.5, 3.94, 512);
+    boolean m_liftCommandSent = false;
+    PathGen m_pathGen[] = {new PathGen(24.5, 3.94, 512), new PathGen(24.5, 3.94, 512)};
 
     public void robotInit() {
         m_drivetrain.setTalonIDs(0,1,2,3,4,5);  // 0-2 are left motors, 3-5 are right motors
@@ -40,20 +45,16 @@ public class Robot extends TimedRobot {
         m_drivetrain.setEncPhase(true, true);
         m_drivetrain.resetEncoders();
         
-        // Pathing method                    // Number of samples          // Time per loop, velocity, Accel, Jerk
-        m_trajectoryConfig = new Trajectory.Config(Trajectory.FitMethod.HERMITE_CUBIC, Trajectory.Config.SAMPLES_FAST, 0.02, 100, 200, 2000);
+        m_trajectoryConfig = makeConfig(100,100,2000);
 
         // Generates the Switch auto path
-        m_paths = new ArrayList<AdvWaypoint>();
-        m_paths.add(AutoPaths.centerToRightSwitch);
-        m_paths.add(AutoPaths.rightSwitchToCenter);
-        m_paths.add(AutoPaths.centerToCube);
+        m_paths = SwitchRight.path();
 
-        m_pathGen.setPD(0.1, 0.01);
-        m_pathGen.generateFollowers(m_paths, m_trajectoryConfig);
+        m_pathGen[0].setPD(0.1, 0.01);
+        m_pathGen[0].generateFollowers(m_paths, m_trajectoryConfig);
         
-        m_leftFollower = m_pathGen.getLeftFollowers();
-        m_rightFollower = m_pathGen.getRightFollowers();
+        m_leftFollowers = m_pathGen[0].getLeftFollowers();
+        m_rightFollowers = m_pathGen[0].getRightFollowers();
         
     }
 
@@ -65,17 +66,13 @@ public class Robot extends TimedRobot {
     }
 
     public void disabledInit(){
-        for(int i=0; i<m_leftFollower.size(); i++){
-            m_leftFollower.get(i).reset();
-            m_rightFollower.get(i).reset();
+        for(int i=0; i<m_leftFollowers.size(); i++){
+            m_leftFollowers.get(i).reset();
+            m_rightFollowers.get(i).reset();
         }        
         m_drivetrain.centerGyro();
         m_drivetrain.resetEncoders();
     }
-
-    double leftOutput = 0;
-    double rightOutput = 0;
-    boolean m_liftCommandSent = false;
 
     /**
      * This is the control loop for Pathfinder. The control loop functions as such:
@@ -96,56 +93,56 @@ public class Robot extends TimedRobot {
      * 
      * The loop can also check when to move the elevator
      */
-    double finishedTime = 0;
     public void autonomousPeriodic() {
 
         // Checks if the time spent delaying is equal to the delay value
-        if(m_timeInManeuver >= m_paths.get(m_pathNumber).getDelay() && !m_leftFollower.get(m_pathNumber).isFinished()){
+        if(m_timeInManeuver >= m_paths.get(m_pathNumber).getDelay() && !m_leftFollowers.get(m_pathNumber).isFinished()){
             
             // Flips the encoder input and final output if the path is set to be inverted
             if(m_paths.get(m_pathNumber).isInverted()){
-                leftOutput = -m_leftFollower.get(m_pathNumber).calculate(-m_drivetrain.getLeftEnc());
-                rightOutput = -m_rightFollower.get(m_pathNumber).calculate(-m_drivetrain.getRightEnc());       
+                m_leftOutput = -m_leftFollowers.get(m_pathNumber).calculate(-m_drivetrain.getLeftEnc());
+                m_rightOutput = -m_rightFollowers.get(m_pathNumber).calculate(-m_drivetrain.getRightEnc());       
             }else{
-                leftOutput = m_leftFollower.get(m_pathNumber).calculate(m_drivetrain.getLeftEnc());
-                rightOutput = m_rightFollower.get(m_pathNumber).calculate(m_drivetrain.getRightEnc());
+                m_leftOutput = m_leftFollowers.get(m_pathNumber).calculate(m_drivetrain.getLeftEnc());
+                m_rightOutput = m_rightFollowers.get(m_pathNumber).calculate(m_drivetrain.getRightEnc());
             }
 
             double gyroHeading = -m_drivetrain.getHeading();
-            System.out.println(Pathfinder.r2d(m_leftFollower.get(m_pathNumber).getHeading()));
-            double desiredHeading = Pathfinder.r2d(m_leftFollower.get(m_pathNumber).getHeading());
+            System.out.println(Pathfinder.r2d(m_leftFollowers.get(m_pathNumber).getHeading()));
+            double desiredHeading = Pathfinder.r2d(m_leftFollowers.get(m_pathNumber).getHeading());
             double angleDifference = Pathfinder.boundHalfDegrees(desiredHeading - gyroHeading);
             double turn = 0.8 * (-1/50) * angleDifference;
 
-            m_drivetrain.drive(leftOutput - turn, rightOutput + turn);
-            System.out.println(m_drivetrain.getHeading());
+            m_drivetrain.drive(m_leftOutput - turn, m_rightOutput + turn);
+            //System.out.println(m_drivetrain.getHeading());
 
             if(!m_liftCommandSent){
                 m_liftCommandSent = true;
                 m_elevator.setLevel(m_paths.get(m_pathNumber).getLiftPosition());
             }
-            finishedTime = 0;
+            m_finishedTime = 0;
         }else{
-                finishedTime = 0;
+                m_finishedTime = 0;
                 m_drivetrain.stop();
                 m_drivetrain.resetEncoders();
-                if(m_paths.get(m_pathNumber).getShouldLiftRaiseBeforeDelay() && !m_liftCommandSent){
+                if(m_paths.get(m_pathNumber).shouldElevatorRaiseBeforeDelay() && !m_liftCommandSent){
                     m_liftCommandSent = true;
                     m_elevator.setLevel(m_paths.get(m_pathNumber).getLiftPosition());             
             }    
         }
 
         // Checks if current path is complete
-        if(m_leftFollower.get(m_pathNumber).isFinished()){
+        if(m_leftFollowers.get(m_pathNumber).isFinished()){
             m_drivetrain.stop();
             m_drivetrain.resetEncoders();
             m_timeInManeuver = 0;
             if(m_pathNumber != m_paths.size()-1){
                 m_pathNumber++;
-            }else{
-
-            }        
+            }       
         }
+
+        // Sets the intake speed
+        m_elevator.intakeSpeed(m_paths.get(m_pathNumber).intakeSpeed());
 
         // Increases the loop counter
         m_timeInManeuver += 0.02;
@@ -160,4 +157,13 @@ public class Robot extends TimedRobot {
         m_elevator.disable();
     }
 
+    /**
+     * Generates a Trajectory.Config object based off of fewer values. This makes it easier to make trajectory config lists.
+     * @param maxSpeed  Max speed of the robot during the maneuver
+     * @param maxAccel  Max acceleration of the robot during the maneuver
+     * @param maxJerk   Max jerk (change in acceleration per second) of the robot during the maneuver
+     */
+    public static Trajectory.Config makeConfig(double maxSpeed, double maxAccel, double maxJerk){
+        return new Trajectory.Config(Trajectory.FitMethod.HERMITE_CUBIC, Trajectory.Config.SAMPLES_FAST, 0.02, maxSpeed, maxAccel, maxJerk);
+    }
 }

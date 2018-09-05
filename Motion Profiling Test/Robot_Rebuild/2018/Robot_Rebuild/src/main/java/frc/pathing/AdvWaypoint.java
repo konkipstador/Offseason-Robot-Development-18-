@@ -15,12 +15,19 @@ import frc.robot.Elevator.LiftLevels;
 
 public class AdvWaypoint{
 
+    /*
+        Pathfinder cannot properly generate a path that has a backwards trajectory. That means that without tweaking 
+        Pathfinder's path in a control loop, moving backwards is impossible. Advanced Waypoint and its control loop 
+        circumvents this by inverting encoder input and reversing motor output, thus mirroring graph quadrants 1 and 2 
+        with 3 and 4, making the robot move in reverse.
+    */
+
     private Waypoint m_targetWaypoints[] = null;
     private Boolean m_isPathInverted = null;
     private LiftLevels m_liftPositionAtStart = LiftLevels.GROUND;
     private double m_intakeSpeed = 0;
     private double m_delay = 0;
-    private boolean m_shouldLiftRaiseBeforeDelay = false;
+    private boolean m_shouldElevatorRaiseBeforeDelay = false;
 
     /**
      * Class constructor.
@@ -31,13 +38,13 @@ public class AdvWaypoint{
      * @param delay         The amount of time the robot should delay before moving in seconds
      * @param shouldLiftRaiseBeforeDelay     Tells the control loop if the elevator should move before or after the delay 
      */
-    public AdvWaypoint(Waypoint waypoints[], Boolean isInverted, LiftLevels liftPosition, double intakeSpeed, double delay, Boolean shouldLiftRaiseBeforeDelay){
+    public AdvWaypoint(Waypoint waypoints[], Boolean isInverted, LiftLevels liftPosition, double intakeSpeed, double delay, Boolean shouldElevatorRaiseBeforeDelay){
         m_targetWaypoints = waypoints;
         m_isPathInverted = isInverted;
         m_liftPositionAtStart = liftPosition;
         m_intakeSpeed = intakeSpeed;
         m_delay = delay;
-        m_shouldLiftRaiseBeforeDelay = shouldLiftRaiseBeforeDelay;
+        m_shouldElevatorRaiseBeforeDelay = shouldElevatorRaiseBeforeDelay;
     }
 
     public Waypoint[] getWaypointArray(){
@@ -60,7 +67,7 @@ public class AdvWaypoint{
         return m_delay;
     }
     
-    public boolean getShouldLiftRaiseBeforeDelay(){
-        return m_shouldLiftRaiseBeforeDelay;
+    public boolean shouldElevatorRaiseBeforeDelay(){
+        return m_shouldElevatorRaiseBeforeDelay;
     }  
 }
