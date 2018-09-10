@@ -9,15 +9,18 @@ package frc.robot;
 
 import java.util.ArrayList;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
-import jaci.pathfinder.Pathfinder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.auto.AutoMode;
+import frc.auto.SwitchLeft;
+import frc.auto.SwitchRight;
+import frc.pathing.AdvWaypoint;
+import frc.pathing.PathGen;
+import frc.robot.Elevator.LiftLevels;
 import jaci.pathfinder.Trajectory;
 import jaci.pathfinder.followers.EncoderFollower;
-import frc.pathing.PathGen;
-import frc.pathing.AdvWaypoint;
-import frc.robot.Elevator;
-import frc.auto.*;
 
 public class Robot extends TimedRobot {
 
@@ -25,18 +28,19 @@ public class Robot extends TimedRobot {
     Elevator m_elevator = Elevator.getInstance();
     Joystick m_dualshock = new Joystick(0);
 
-    ArrayList<AdvWaypoint> m_paths;
-    Trajectory.Config m_trajectoryConfig;
-    ArrayList<EncoderFollower> m_leftFollowers = null;
-    ArrayList<EncoderFollower> m_rightFollowers = null;   
-    int m_pathNumber = 0;
-    double m_timeInManeuver;
+    Trajectory.Config m_trajectoryConfig = makeConfig(100,100,2000);
     double m_finishedTime = 0;
     double m_leftOutput = 0;
     double m_rightOutput = 0;
+    int m_pathNumber = 0;
+    double m_timeInManeuver;
     double m_totalTime = 0;
     boolean m_liftCommandSent = false;
+    ArrayList<AdvWaypoint> m_pathLogic;
     PathGen m_pathGen[] = {new PathGen(24.5, 3.94, 512), new PathGen(24.5, 3.94, 512)};
+    AutoMode m_selectedModes[] = {SwitchLeft.getInstance(), SwitchRight.getInstance()}; 
+    ArrayList<EncoderFollower> m_leftFollowers = null;
+    ArrayList<EncoderFollower> m_rightFollowers = null;  
 
     public void robotInit() {
         m_drivetrain.setTalonIDs(0,1,2,3,4,5);  // 0-2 are left motors, 3-5 are right motors
@@ -44,18 +48,13 @@ public class Robot extends TimedRobot {
         m_drivetrain.invertRight(true);
         m_drivetrain.setEncPhase(true, true);
         m_drivetrain.resetEncoders();
-        
-        m_trajectoryConfig = makeConfig(100,100,2000);
 
-        // Generates the Switch auto path
-        m_paths = SwitchRight.path();
+        // Generates the Switch auto paths
+        m_pathGen[0].setPD(0.075, 0.005);
+        m_pathGen[0].generateFollowers(m_selectedModes[0].getPath(), m_trajectoryConfig);
 
-        m_pathGen[0].setPD(0.1, 0.01);
-        m_pathGen[0].generateFollowers(m_paths, m_trajectoryConfig);
-        
-        m_leftFollowers = m_pathGen[0].getLeftFollowers();
-        m_rightFollowers = m_pathGen[0].getRightFollowers();
-        
+        m_pathGen[1].setPD(0.075, 0.005);
+        m_pathGen[1].generateFollowers(m_selectedModes[1].getPath(), m_trajectoryConfig);     
     }
 
     public void autonomousInit() {
@@ -63,6 +62,18 @@ public class Robot extends TimedRobot {
         m_timeInManeuver = 0;
         m_totalTime = 0;
         m_liftCommandSent = false;
+
+        char gameData[] = DriverStation.getInstance().getGameSpecificMessage().toCharArray();
+
+        if(gameData[0] == 'L'){
+            m_leftFollowers = m_pathGen[0].getLeftFollowers();
+            m_rightFollowers = m_pathGen[0].getRightFollowers();
+            m_pathLogic = m_selectedModes[0].getPath();
+        }else{
+            m_leftFollowers = m_pathGen[1].getLeftFollowers();
+            m_rightFollowers = m_pathGen[1].getRightFollowers();
+            m_pathLogic = m_selectedModes[1].getPath();
+        }  
     }
 
     public void disabledInit(){
@@ -71,7 +82,7 @@ public class Robot extends TimedRobot {
             m_rightFollowers.get(i).reset();
         }        
         m_drivetrain.centerGyro();
-        m_drivetrain.resetEncoders();
+        m_drivetrain.resetEncoders();   
     }
 
     /**
@@ -96,38 +107,42 @@ public class Robot extends TimedRobot {
     public void autonomousPeriodic() {
 
         // Checks if the time spent delaying is equal to the delay value
-        if(m_timeInManeuver >= m_paths.get(m_pathNumber).getDelay() && !m_leftFollowers.get(m_pathNumber).isFinished()){
+        if(m_timeInManeuver >= m_pathLogic.get(m_pathNumber).getDelay() && !m_leftFollowers.get(m_pathNumber).isFinished()){
             
             // Flips the encoder input and final output if the path is set to be inverted
-            if(m_paths.get(m_pathNumber).isInverted()){
+            if(m_pathLogic.get(m_pathNumber).isInverted()){
                 m_leftOutput = -m_leftFollowers.get(m_pathNumber).calculate(-m_drivetrain.getLeftEnc());
                 m_rightOutput = -m_rightFollowers.get(m_pathNumber).calculate(-m_drivetrain.getRightEnc());       
             }else{
                 m_leftOutput = m_leftFollowers.get(m_pathNumber).calculate(m_drivetrain.getLeftEnc());
                 m_rightOutput = m_rightFollowers.get(m_pathNumber).calculate(m_drivetrain.getRightEnc());
             }
-
+            
+            /*
             double gyroHeading = -m_drivetrain.getHeading();
             System.out.println(Pathfinder.r2d(m_leftFollowers.get(m_pathNumber).getHeading()));
             double desiredHeading = Pathfinder.r2d(m_leftFollowers.get(m_pathNumber).getHeading());
             double angleDifference = Pathfinder.boundHalfDegrees(desiredHeading - gyroHeading);
             double turn = 0.8 * (-1/50) * angleDifference;
+            System.out.println(m_drivetrain.getHeading());
+            */
 
+            double turn = 0;
             m_drivetrain.drive(m_leftOutput - turn, m_rightOutput + turn);
-            //System.out.println(m_drivetrain.getHeading());
+            
 
             if(!m_liftCommandSent){
                 m_liftCommandSent = true;
-                m_elevator.setLevel(m_paths.get(m_pathNumber).getLiftPosition());
+                m_elevator.setLevel(m_pathLogic.get(m_pathNumber).getLiftPosition());
             }
             m_finishedTime = 0;
         }else{
                 m_finishedTime = 0;
                 m_drivetrain.stop();
                 m_drivetrain.resetEncoders();
-                if(m_paths.get(m_pathNumber).shouldElevatorRaiseBeforeDelay() && !m_liftCommandSent){
+                if(m_pathLogic.get(m_pathNumber).shouldElevatorRaiseBeforeDelay() && !m_liftCommandSent){
                     m_liftCommandSent = true;
-                    m_elevator.setLevel(m_paths.get(m_pathNumber).getLiftPosition());             
+                    m_elevator.setLevel(m_pathLogic.get(m_pathNumber).getLiftPosition());             
             }    
         }
 
@@ -136,13 +151,13 @@ public class Robot extends TimedRobot {
             m_drivetrain.stop();
             m_drivetrain.resetEncoders();
             m_timeInManeuver = 0;
-            if(m_pathNumber != m_paths.size()-1){
+            if(m_pathNumber != m_pathLogic.size()-1){
                 m_pathNumber++;
             }       
         }
 
         // Sets the intake speed
-        m_elevator.intakeSpeed(m_paths.get(m_pathNumber).intakeSpeed());
+        m_elevator.intakeSpeed(m_pathLogic.get(m_pathNumber).intakeSpeed());
 
         // Increases the loop counter
         m_timeInManeuver += 0.02;
@@ -150,11 +165,56 @@ public class Robot extends TimedRobot {
     }
 
     public void teleopPeriodic() {
-        m_drivetrain.drive(-m_dualshock.getRawAxis(1),-m_dualshock.getRawAxis(5));    // Tank drive
+        // Drive code
+        double xPercent = -m_dualshock.getRawAxis(1)*m_elevator.maxDrivetrainVelocity();
+        double yPercent = -m_dualshock.getRawAxis(0)*m_elevator.maxDrivetrainTurnSpeed();
+        m_drivetrain.drive(yPercent + xPercent, yPercent - xPercent);
+
+        // Preset elevator heights
+        if(m_dualshock.getRawButton(ControllerButtons.L1.get())) {
+            m_elevator.setLevel(LiftLevels.GROUND);
+        }
+        if(m_dualshock.getRawButton(ControllerButtons.R1.get())) {
+            m_elevator.setLevel(LiftLevels.EXCHANGE);
+        }
+        if(m_dualshock.getRawButton(ControllerButtons.CROSS.get())) {
+            m_elevator.setLevel(LiftLevels.SWITCH);
+        }
+        if(m_dualshock.getRawButton(ControllerButtons.OPTIONS.get())) {
+            m_elevator.setLevel(LiftLevels.PORTAL);
+        }
+        if(m_dualshock.getRawButton(ControllerButtons.CIRCLE.get())) {
+            m_elevator.setLevel(LiftLevels.SCALELOW);
+        }
+        if(m_dualshock.getRawButton(ControllerButtons.SQUARE.get())) {
+            m_elevator.setLevel(LiftLevels.SCALEMID);
+        }
+        if(m_dualshock.getRawButton(ControllerButtons.TRIANGLE.get())) {
+            m_elevator.setLevel(LiftLevels.SCALEHIGH);
+        }
+
+        // Semi-granular elevator movement
+        if(m_dualshock.getPOV() == 0){
+            m_elevator.moveGranulary(1);
+        }
+        if(m_dualshock.getPOV() == 180){
+            m_elevator.moveGranulary(1);
+        }
+
+        // Granular intake control
+        if(Math.abs(m_dualshock.getRawAxis(5)) > 0.1){
+            m_elevator.intakeSpeed(-m_dualshock.getRawAxis(5));
+        }
     }
 
     public void disabledPeriodic(){
         m_elevator.disable();
+    }
+
+    public void robotPerodic(){
+        SmartDashboard.putNumber("Left Encoder", m_drivetrain.getLeftEnc());
+        SmartDashboard.putNumber("Right Encoder", m_drivetrain.getRightEnc());
+        SmartDashboard.putNumber("Heading", m_drivetrain.getHeading());
     }
 
     /**
