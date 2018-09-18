@@ -51,11 +51,7 @@ public class Robot extends TimedRobot {
 	
 	Joystick m_joystick0 = new Joystick(0);	// Flight Stick
 	Joystick m_joystick1 = new Joystick(1);	// Xbox Controller 
-    
-    MiniPID m_driveLoop = new MiniPID(1,0,0);	// Autonomus driving PID loop
-    MiniPID m_turnLoop = new MiniPID(1,0,0);	// Autonomus turning PID loop
 
-    AutoFunction m_currentFunction = AutoFunction.DRIVE;	// What function the auto control loop should perform
     double m_autoSetpoint = 0;		// What setpoint the PID loop should track (inches or degrees)
     double m_autoTime = 0;			// How long an autonomus action has held a low motor power OR how long a function has ran in Autonomus
     int m_autoStep = 0;				// What part of the switch statement is Autonomus on
@@ -103,7 +99,6 @@ public class Robot extends TimedRobot {
 	// Resets navigation instrumination 
 	public void autonomousInit() {
         m_elevator.disabled();
-        m_currentFunction = AutoFunction.DRIVE;
         resetNavigation();	
 		m_ahrs.reset();
 		m_autoStep = 0;	
@@ -118,270 +113,463 @@ public class Robot extends TimedRobot {
 		}
     }
     
+	double speed = 0;
+	int autoCount = 0;
+	int encoderOffset = 0;
+	double RPM = 0;
+	int runs = 0;
+
 	
+
 	public void autonomousPeriodic() {
-    
-        double turnPower = 0;
-        double basePower = 0;
-		double heading = -m_ahrs.getAngle(); // Gyro is inverted;
-
-		if(m_autoMode.equals("switch")){
-			// The alliance's Switch is on the right
-			if(m_switchPosition == 'R'){
-				switch(m_autoStep){
-					case 0:	// Drive straight 1 foot and drop the arms
-						m_elevator.setLevel(LiftLevels.EXCHANGE);
-						driveStraightValues(12,0,0.7);	
-					break;
 	
-					case 1:	// Turn the robot 
-						turnValues(-48.7,0.7);
-					break;
-	
-					case 2:	// Drive near the switch
-						driveStraightValues(62.2,-48.7,0.7);
-					break;
-	
-					case 3:	// Turn towards the switch and raise the elevator to switch height
-						m_elevator.setLevel(LiftLevels.SWITCH);
-						turnValues(0,0.7);
-					break;
-	
-					case 4:	// Drive up to the switch
-						driveStraightValues(41,0,0.6); 
-					break;
-	
-					case 5:	// Eject the cube
-						m_currentFunction = AutoFunction.SHOOT;
-					break;
-	
-					case 6:	// Drive away from the switch and lower the elevator after backing up 6 inches
-						driveStraightValues(-60,0,0.6);
-						if(m_encoders.getDistance() < -6)
-							m_elevator.setLevel(LiftLevels.GROUND);				
-					break;
-	
-					case 7:	// Turn to face the cube pile
-						turnValues(52.4,0.7);
-					break;
-	
-					case 8:	// Enable the intake and drive to the cubes
-						m_elevator.grab();
-						driveStraightValues(40.6,52.4,0.7);
-					break;
-	
-					case 9:	// Stop the bot for 12 program cycles (1/4th of a second)
-						m_currentFunction = AutoFunction.STOP;
-						if(m_autoTime > 12)
-							m_autoComplete = true;
-					break;
-	
-					case 10:// Drive backwards near the switch
-						driveStraightValues(-40.6,52.4,0.7);
-					break;
-	
-					case 11:// Turn towards the switch and raise the elevator
-						m_elevator.setLevel(LiftLevels.SWITCH);
-						turnValues(0,0.7);
-					break;
-	
-					case 12:// Drive to the switch
-						driveStraightValues(41,0,0.6); 
-					break;
-	
-					case 13:// Eject the cube
-						m_currentFunction = AutoFunction.SHOOT;
-					break;
-	
-					case 14:// Back up and lower the elevator after travelling 6 inches
-						driveStraightValues(-60,0,0.6);
-						if(m_encoders.getDistance() < -6)
-							m_elevator.setLevel(LiftLevels.GROUND);				
-					break;
-
-					case 15:// Stop the robot and wait for Teleoperated
-						m_currentFunction = AutoFunction.STOP;
-					break;
+		// SWITCH CENTER AUTO
+		if(m_autoMode.equals("switch")) {
+			switch(m_autoStep) {
+			
+			// Drive forward a small amount to get away from the wall
+			case 0:
+				m_elevator.setLevel(LiftLevels.EXCHANGE);
+				if(m_encoders.getDistance() > 6) {
+					m_drive.tankDrive(0, 0);
+					m_autoStep = 1;
+				}else {
+					driveStraight(0.6,0);
 				}
-			}
-
-			// The alliance's Switch is on the left
-			if(m_switchPosition == 'L'){
-				switch(m_autoStep){
-					case 0:	// Drive straight 1 foot and drop the arms
-						m_elevator.setLevel(LiftLevels.EXCHANGE);
-						driveStraightValues(12,0,0.7);	
-					break;
-	
-					case 1:	// Turn the robot 
-						turnValues(54.4,0.7);
-					break;
-	
-					case 2:	// Drive near the switch
-						driveStraightValues(70.4,54.4,0.7);
-					break;
-	
-					case 3:	// Turn towards the switch and raise the elevator to switch height
-						m_elevator.setLevel(LiftLevels.SWITCH);
-						turnValues(0,0.7);
-					break;
-	
-					case 4:	// Drive up to the switch
-						driveStraightValues(41,0,0.6); 
-					break;
-	
-					case 5:	// Eject the cube
-						m_currentFunction = AutoFunction.SHOOT;
-					break;
-	
-					case 6:	// Drive away from the switch and lower the elevator after backing up 6 inches
-						driveStraightValues(-60,0,0.6);
-						if(m_encoders.getDistance() < -6)
-							m_elevator.setLevel(LiftLevels.GROUND);				
-					break;
-	
-					case 7:	// Turn to face the cube pile
-						turnValues(-52.4,0.7);
-					break;
-	
-					case 8:	// Enable the intake and drive to the cubes
-						m_elevator.grab();
-						driveStraightValues(40.6,-52.4,0.7);
-					break;
-	
-					case 9:	// Stop the bot for 12 program cycles (1/4th of a second)
-						m_currentFunction = AutoFunction.STOP;
-						if(m_autoTime > 12)
-							m_autoComplete = true;
-					break;
-	
-					case 10:// Drive backwards near the switch
-						driveStraightValues(-40.6,-52.4,0.7);
-					break;
-	
-					case 11:// Turn towards the switch and raise the elevator
-						m_elevator.setLevel(LiftLevels.SWITCH);
-						turnValues(0,0.7);
-					break;
-	
-					case 12:// Drive to the switch
-						driveStraightValues(41,0,0.6); 
-					break;
-	
-					case 13:// Eject the cube
-						m_currentFunction = AutoFunction.SHOOT;
-					break;
-	
-					case 14:// Back up and lower the elevator after travelling 6 inches
-						driveStraightValues(-60,0,0.6);
-						if(m_encoders.getDistance() < -6)
-							m_elevator.setLevel(LiftLevels.GROUND);				
-					break;
-
-					case 15:// Stop the robot and wait for Teleoperated
-						m_currentFunction = AutoFunction.STOP;
-					break;
+				
+				break;
+				
+			// Roll forward to 1 foot then move to the next step
+			case 1:
+				
+				if(m_encoders.getDistance() > 11) {
+					m_autoStep = 2;
 				}
+				break;
+			
+			// Turn towards the side of the Switch is ours
+			case 2:
+				
+				if(m_switchPosition == 'L') {
+					if(m_ahrs.getYaw() < -35) {
+						speed = AutoSpeed.TURN_LOW.speed();
+					}else {
+						speed = AutoSpeed.TURN_HIGH.speed();
+					}
+					
+					if(m_ahrs.getYaw() < -43) {
+						m_drive.tankDrive(0, 0);
+						m_autoStep = 3;
+						m_encoders.reset();
+					}
+					m_drive.tankDrive(-speed,speed);
+				}
+				
+				if(m_switchPosition == 'R') {
+					if(m_ahrs.getYaw() > 35) {
+						speed = AutoSpeed.TURN_LOW.speed();
+					}else {
+						speed = AutoSpeed.TURN_HIGH.speed();
+					}
+					
+					if(m_ahrs.getYaw() > 43) {
+						m_drive.tankDrive(0, 0);
+						m_autoStep = 3;
+						m_encoders.reset();
+					}
+					m_drive.tankDrive(speed,-speed);
+				}
+				
+				break;
+				
+			// Drive forward to about the center of our switch
+			case 3:
+				if(m_encoders.getDistance() > 40) {
+					speed = 0.6;
+				}else {
+					speed = 0.65;
+				}
+				
+				
+				if(m_encoders.getDistance() > 60) {
+					m_drive.tankDrive(0, 0);
+					m_autoStep = 4;
+				}else {
+					if(m_switchPosition == 'R')
+					driveStraight(speed,45);
+					if(m_switchPosition == 'L')
+						driveStraight(speed,-45);
+				}
+				break;
+				
+				
+			// Turn forward to face the switch
+			case 4:
+				
+				if(m_switchPosition == 'L') {
+					if(m_ahrs.getYaw() > -20) {
+						speed = AutoSpeed.TURN_LOW.speed();
+					}else {
+						speed = AutoSpeed.TURN_HIGH.speed();
+					}
+					
+					if(m_ahrs.getYaw() > -3) {
+						m_drive.tankDrive(0, 0);
+						m_autoStep = 5;
+						m_encoders.reset();
+					}
+					m_drive.tankDrive(speed,-speed);
+				}
+				
+				if(m_switchPosition == 'R') {
+					if(m_ahrs.getYaw() < 20) {
+						speed = AutoSpeed.TURN_LOW.speed();
+					}else {
+						speed = AutoSpeed.TURN_HIGH.speed();
+					}
+					
+					if(m_ahrs.getYaw() < 3) {
+						m_drive.tankDrive(0, 0);
+						m_autoStep = 5;
+						m_encoders.reset();
+						autoCount = 0;
+					}
+					m_drive.tankDrive(-speed,speed);
+				}
+				
+				break;
+			
+			// Raise lift and drive forward to the switch
+			case 5:
+				m_elevator.setLevel(LiftLevels.SWITCH);
+				autoCount++;
+				driveStraight(0.6, 0);
+				if(RPM < 2 && autoCount > 25) {
+					m_drive.tankDrive(0, 0);
+					m_autoStep = 6;
+					autoCount = 0;
+				}
+				break;
+			
+			// Eject the cube
+			case 6:
+				
+				m_elevator.eject();
+				autoCount++;
+				
+				if(autoCount > 50) {
+					m_elevator.stopIntake();
+					m_autoStep = 7;
+					autoCount = 0;
+					m_encoders.reset();
+				}
+				break;
+			
+			// Back up for 60 inches
+			case 7:
+				
+				if(m_encoders.getDistance() < -55) {
+					m_drive.tankDrive(0, 0);
+					m_autoStep = 8;
+					m_elevator.setLevel(LiftLevels.GROUND);
+				}else {
+					driveStraight(-0.5,0);
+				}
+				
+				break;
+				
+			case 8:
+				if(m_switchPosition == 'R') {
+					if(m_ahrs.getYaw() < -55) {
+						speed = AutoSpeed.TURN_LOW.speed();
+					}else {
+						speed = AutoSpeed.TURN_HIGH.speed();
+					}
+					
+					if(m_ahrs.getYaw() < 3) {
+						m_drive.tankDrive(0, 0);
+						m_autoStep = 9;
+						m_encoders.reset();
+						autoCount = 0;
+					}
+					m_drive.tankDrive(speed,-speed);
+				}
+				break;
+
+			case 9:
+
+				
+				break;
 			}
-		}
-
-        switch(m_currentFunction){
-
-            // Driving function
-            case DRIVE:
-
-                m_driveLoop.setOutputLimits(m_driveOutputLimit);
-                basePower = m_driveLoop.getOutput(m_encoders.getDistance(), m_autoSetpoint);
-                
-                if(heading > m_desiredAngle + 0.5)
-                    turnPower = 0.4;
-                if(heading > m_desiredAngle + 0.5)
-                    turnPower = -0.4;
-
-                if(Math.abs(basePower) < 0.1){
-                    m_autoTime++;
-                }else{
-                    m_autoTime = 0;
-                }
-
-				if(m_cyclesAutoStalled > m_autoTime){    // 1/4th of a second of being still 
-                    m_drive.arcadeDrive(basePower, turnPower);
-                }else{
-					m_drive.arcadeDrive(0,0);
-					m_autoComplete = true;
-                }
-
-            break;
-
-            // Turning funtion
-            case TURN:
-
-                turnPower = m_turnLoop.getOutput(m_desiredAngle, m_autoSetpoint);
-
-                if(Math.abs(turnPower) < 0.1){
-                    m_autoTime++;
-                }else{
-                    m_autoTime = 0;
-                }
-
-				if(m_cyclesAutoStalled > m_autoTime){    // 1/4th of a second of being still 
-                    m_drive.arcadeDrive(0, turnPower);
-                }else{
-					m_drive.arcadeDrive(0,0);
-					m_autoComplete = true;
-                }
-
-            break;
-
-            // Shooting function
-            case SHOOT:
-
-				m_drive.arcadeDrive(0,0);
-
-                if(m_autoTime < 25){    // 0.5 seconds
-                    m_elevator.eject();
-                }else{
-                    m_elevator.stopIntake();
-                    m_autoComplete = true;
-                }
-                m_autoTime++;
-
-            break;
-
-            // Makes the robot do absolutely nothing.
-            default:
-                m_drive.tankDrive(0, 0);
-                m_elevator.stopIntake();
-                m_autoTime++;
-			break;
 		}
 		
-		// Automatically advances Autonomus once part of it is complete
-		if(m_autoComplete){
-			m_autoComplete = false;
-			resetNavigation();
-			m_autoStep++;
+		// CROSS AUTOLINE AUTO
+		if(m_autoMode.equals("ctl")) {
+			switch(m_autoStep) {
+			case 0:
+				
+				if(m_encoders.getDistance() > 70) {
+					speed = 0.4;
+				}else {
+					speed = 0.6;
+				}
+				
+				
+				if(m_encoders.getDistance() > 101) {
+					m_drive.tankDrive(0, 0);
+					m_autoStep = 1;
+				}else {
+					driveStraight(speed,0);
+				}
+				
+				break;
+				
+			case 1:
+				
+				break;
+			}
+		}
+		
+		// Right Cross Scale
+		if(m_autoMode.equals("scale right")) {
+			// Our Side
+			if(m_scalePosition == 'R') {
+				switch(m_autoStep) {
+				// Drive forward
+				case 0:
+					
+					if(m_encoders.getDistance() > 190) {
+						speed = 0.55;
+					}else {
+						speed = 0.7;
+					}
+					if((m_encoders.getDistance() > 220)) {
+						m_drive.tankDrive(0, 0);
+						m_autoStep = 1;
+						m_encoders.reset();
+						autoCount = 0;
+					}else {
+						driveStraight(speed,0);
+					}
+					
+					break;
+					
+				// Turn and raise the elevator	
+				case 1:
+					
+					if(m_ahrs.getYaw() < -15) {
+						speed = AutoSpeed.TURN_LOW.speed();
+					}else {
+						speed = AutoSpeed.TURN_HIGH.speed();
+					}
+					m_elevator.setLevel(LiftLevels.SCALEHIGH);
+					if(m_ahrs.getYaw() < -23) {
+						speed = 0;
+						m_drive.tankDrive(0, 0);
+						if(m_elevator.getRaw()> 20000) {
+							autoCount = 0;
+							m_autoStep = 2;
+							m_encoders.reset();
+						}
+					}
+					m_drive.tankDrive(-speed,speed);
+					
+					break;
+				// Drive to scale
+				case 2:
+					driveStraight(0.5,-25);
+					if((m_encoders.getDistance() > 46)) {
+						m_drive.tankDrive(0, 0);
+						m_autoStep = 3;
+						m_encoders.reset();
+						autoCount = 0;
+					}
+					break;
+				// Shoot	
+				case 3:
+					m_elevator.eject();
+					autoCount++;
+					
+					if(autoCount > 50) {
+						m_elevator.stopIntake();
+						m_autoStep = 4;
+						autoCount = 0;
+					}
+					break;
+				// Back Up
+				case 4:
+
+					autoCount++;
+					driveStraight(-0.5, -25);
+					if(autoCount > 75) {
+						m_elevator.setLevel(LiftLevels.GROUND);
+						m_autoStep = 5;
+						autoCount = 0;
+					}
+					break;
+				case 5:
+					
+					if(m_ahrs.getYaw() < -110) {
+						speed = AutoSpeed.TURN_LOW.speed();
+					}else {
+						speed = AutoSpeed.TURN_HIGH.speed();
+					}
+
+					if(m_ahrs.getYaw() < -125) {
+						m_drive.tankDrive(0, 0);
+						m_autoStep = 6;
+						m_encoders.reset();
+						autoCount = 0;
+					}
+					m_drive.tankDrive(-speed,speed);
+					
+					
+				break;
+				
+				case 6:
+					
+					break;
+				}
+			}
+		
+			// Opposite side (Cross)
+			if(m_scalePosition == 'L') {
+				switch(m_autoStep) {
+				case 0:
+					m_elevator.setLevel(LiftLevels.EXCHANGE);
+					if(m_encoders.getDistance() > 160) {
+						speed = 0.6;
+					}else {
+						speed = 0.72;
+					}
+					// Aiming for 226-20
+					if((m_encoders.getDistance() > 204)) {
+						m_drive.tankDrive(0, 0);
+						m_autoStep = 1;
+						m_encoders.reset();
+						autoCount = 0;
+					}else {
+						driveStraight(speed,0);
+					}
+					
+					break;
+					
+				case 1:
+					// turn
+					if(m_ahrs.getYaw() < -75) {
+						speed = AutoSpeed.TURN_LOW.speed();
+					}else {
+						speed = AutoSpeed.TURN_HIGH.speed();
+					}
+	
+					if(m_ahrs.getYaw() < -85) {
+						m_drive.tankDrive(0, 0);
+						m_autoStep = 2;
+						m_encoders.reset();
+						autoCount = 0;
+					}
+					m_drive.tankDrive(-speed,speed);
+					
+					break;
+					// Drive over the bump and over to the other side of the Scale
+				case 2:
+					if(m_encoders.getDistance() > 200) {
+						speed = 0.55;
+					}else {
+						speed = 0.7;
+					}
+					// Aiming for 226-20
+					if((m_encoders.getDistance() > 230)) {
+						m_drive.tankDrive(0, 0);
+						m_autoStep = 3;
+						m_encoders.reset();
+						autoCount = 0;
+					}else {
+						driveStraight(speed,-90);
+					}
+					break;
+					// Turn forward
+				case 3:
+					
+					// turn
+					if(m_ahrs.getYaw() > 16) {
+						speed = AutoSpeed.TURN_LOW.speed();
+					}else {
+						speed = AutoSpeed.TURN_HIGH.speed();
+					}
+					m_elevator.setLevel(LiftLevels.SCALEHIGH);
+	
+					if(m_ahrs.getYaw() > 20) {
+						m_drive.tankDrive(0, 0);
+						m_autoStep = 4;
+						m_encoders.reset();
+						autoCount = 0;
+					}
+					m_drive.tankDrive(speed,-speed);
+					
+					break;
+					// Drive to scale
+				case 4:
+					driveStraight(0.5,30);
+					if((m_encoders.getDistance() > 56)) {
+						m_drive.tankDrive(0, 0);
+						m_autoStep = 5;
+						m_encoders.reset();
+						autoCount = 0;
+					}
+					break;
+				// Shoot	
+				case 5:
+					m_elevator.eject();
+					autoCount++;
+					
+					if(autoCount > 50) {
+						m_elevator.stopIntake();
+						m_autoStep = 6;
+						autoCount = 0;
+					}
+					break;
+				// Back Up
+				case 6:
+	
+					autoCount++;
+					driveStraight(-0.5, 30);
+					if(autoCount > 75) {
+						m_elevator.setLevel(LiftLevels.GROUND);
+						m_autoStep = 7;
+						autoCount = 0;
+					}
+					break;
+				case 7:
+				break;				
+				}	
+			}
+			
+
+			runs++;
+			if(runs > 4) {
+				RPM = (Math.abs(m_encoders.getRaw()-encoderOffset)/1024)*600;
+				runs = 0;
+				encoderOffset = m_encoders.getRaw();
+			}
 		}
     }
 
-	// Converts values attached to understandable names into variables are used in the Autonomus control loop,
-	// while making auto switch statements easier to code and understand
-    public void driveStraightValues(double setpoint, double desiredAngle, double outputLimit){
-        m_autoSetpoint = setpoint;
-        m_desiredAngle = desiredAngle;
-		m_driveOutputLimit = outputLimit;
-		m_currentFunction = AutoFunction.DRIVE;
-    }
-    public void turnValues(double desiredAngle, double outputLimit){
-		m_autoSetpoint = desiredAngle;
-		m_driveOutputLimit = outputLimit;
-		m_currentFunction = AutoFunction.TURN;
-    }
-     
-	//This enum allows a switch statement to switch between multiple auto functions
-    public enum AutoFunction {
-        DRIVE, TURN, SHOOT, STOP;
-    }
+	public void driveStraight(double speed, double heading) {
+		double gyro = m_ahrs.getYaw();
+		double turn = 0;
+		if(gyro > heading+0.5) {
+			turn = -0.2;
+		}
+		if(gyro < heading-0.5) {
+			turn = 0.2;	
+		}
+		if(gyro >= heading-0.5 && gyro <= heading + 0.5) {
+			turn = 0;
+		}
+		
+		m_drive.arcadeDrive(speed, turn);
+	}
 
 	// Code ran during the driver-operated period of the Match.
 	public void teleopPeriodic() {
@@ -471,8 +659,6 @@ public class Robot extends TimedRobot {
     
     public void resetNavigation(){	
 		m_encoders.reset();
-        m_driveLoop.reset();
-        m_turnLoop.reset();
         m_autoSetpoint = 0;
 		m_autoTime = 0;
         m_autoComplete = false;
