@@ -22,7 +22,6 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.MiniPID;
 
 public class Robot extends TimedRobot {
 		
@@ -30,7 +29,7 @@ public class Robot extends TimedRobot {
 
 	AHRS m_ahrs = new AHRS(I2C.Port.kMXP);	// Gyroscope and Accelerometer	
 
-	Elevator m_elevator = Elevator.getInstance();	// Elevator and intake	
+	Elevator m_elevator = null;	// Elevator and intake	
 
 	DigitalInput m_beam2 = new DigitalInput(2);	// Break Beam Sensor	
 
@@ -52,20 +51,21 @@ public class Robot extends TimedRobot {
 	Joystick m_joystick0 = new Joystick(0);	// Flight Stick
 	Joystick m_joystick1 = new Joystick(1);	// Xbox Controller 
 
-    double m_autoSetpoint = 0;		// What setpoint the PID loop should track (inches or degrees)
     double m_autoTime = 0;			// How long an autonomus action has held a low motor power OR how long a function has ran in Autonomus
     int m_autoStep = 0;				// What part of the switch statement is Autonomus on
-    double m_desiredAngle = 0;		// What angle should be held while driving in Autonomus
-    double m_driveOutputLimit = 0;	// Autonomus motor power limit
-	boolean m_autoComplete = false;	// Used to tell the function that advances Autonomus forward if a maneuver has been completed
 	String m_autoMode = "switch";	// Selected Autonomus mode
 	char m_switchPosition = 'R';	// Switch plate location
 	char m_scalePosition = 'L';		// Scale plate location
-	final int m_cyclesAutoStalled = 12;	// How long the robot should wait after reaching the autonomus setpoint before advancing Autonomus
+	double speed = 0;
+	int m_autoCount = 0;
+	int m_encoderOffset = 0;
+	double m_rpm = 0;
 
 	// Ran once on robot initalization
 	public void robotInit() {	
-		
+
+		m_elevator = Elevator.getInstance();
+
 		// Configure the right drivetrain encoder
 		m_r1.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 50);
 		m_r1.setSensorPhase(false);
@@ -85,13 +85,15 @@ public class Robot extends TimedRobot {
 		// Autonomus Modes
 		autoModes.addDefault("Cross Auto Line", "ctr");
 		autoModes.addObject("Switch: Center Start", "switch");
-		autoModes.addObject("Scale: Right Start", "scale");
+		autoModes.addObject("Scale: Right Start", "scale right");
+		autoModes.addObject("Scale: Right Slam", "slam right");
 		SmartDashboard.putData(autoModes);
 	}
 
 	public void disabledPeriodic() {
 		m_elevator.disabled();
 	}
+
 	public void teleopInit() {
 		m_elevator.disabled();
 	}
@@ -103,6 +105,7 @@ public class Robot extends TimedRobot {
 		m_ahrs.reset();
 		m_autoStep = 0;	
 
+		m_autoMode = autoMode();
 		String gameSpecificMessage = DriverStation.getInstance().getGameSpecificMessage();
 		if(gameSpecificMessage.equals("")){
 			m_autoMode = "error";
@@ -113,16 +116,9 @@ public class Robot extends TimedRobot {
 		}
     }
     
-	double speed = 0;
-	int autoCount = 0;
-	int encoderOffset = 0;
-	double RPM = 0;
-	int runs = 0;
-
-	
-
 	public void autonomousPeriodic() {
-	
+		SmartDashboard.putNumber("m_rpm",m_rpm);
+
 		// SWITCH CENTER AUTO
 		if(m_autoMode.equals("switch")) {
 			switch(m_autoStep) {
@@ -184,22 +180,45 @@ public class Robot extends TimedRobot {
 				
 			// Drive forward to about the center of our switch
 			case 3:
-				if(m_encoders.getDistance() > 40) {
-					speed = 0.6;
-				}else {
-					speed = 0.65;
+
+				if(m_switchPosition == 'R') {
+					if(m_encoders.getDistance() > 30) {
+						speed = 0.6;
+					}else {
+						speed = 0.7;
+					}	
+					
+					if(m_encoders.getDistance() > 50) {
+						m_drive.tankDrive(0, 0);
+						m_autoStep = 4;
+					}else {
+						if(m_switchPosition == 'R')
+						driveStraight(speed,45);
+						if(m_switchPosition == 'L')
+							driveStraight(speed,-45);
+					}
 				}
 				
-				
-				if(m_encoders.getDistance() > 60) {
-					m_drive.tankDrive(0, 0);
-					m_autoStep = 4;
-				}else {
-					if(m_switchPosition == 'R')
-					driveStraight(speed,45);
-					if(m_switchPosition == 'L')
-						driveStraight(speed,-45);
+				if(m_switchPosition == 'L') {
+					if(m_encoders.getDistance() > 50) {
+						speed = 0.6;
+					}else {
+						speed = 0.7;
+					}	
+					
+					if(m_encoders.getDistance() > 70) {
+						m_drive.tankDrive(0, 0);
+						m_autoStep = 4;
+					}else {
+						if(m_switchPosition == 'R')
+						driveStraight(speed,45);
+						if(m_switchPosition == 'L')
+							driveStraight(speed,-45);
+					}
 				}
+
+
+				
 				break;
 				
 				
@@ -213,7 +232,7 @@ public class Robot extends TimedRobot {
 						speed = AutoSpeed.TURN_HIGH.speed();
 					}
 					
-					if(m_ahrs.getYaw() > -3) {
+					if(m_ahrs.getYaw() > -6) {
 						m_drive.tankDrive(0, 0);
 						m_autoStep = 5;
 						m_encoders.reset();
@@ -232,7 +251,7 @@ public class Robot extends TimedRobot {
 						m_drive.tankDrive(0, 0);
 						m_autoStep = 5;
 						m_encoders.reset();
-						autoCount = 0;
+						m_autoCount = 0;
 					}
 					m_drive.tankDrive(-speed,speed);
 				}
@@ -242,12 +261,12 @@ public class Robot extends TimedRobot {
 			// Raise lift and drive forward to the switch
 			case 5:
 				m_elevator.setLevel(LiftLevels.SWITCH);
-				autoCount++;
+				m_autoCount++;
 				driveStraight(0.6, 0);
-				if(RPM < 2 && autoCount > 25) {
+				if(m_rpm < 2 && m_autoCount > 75) {
 					m_drive.tankDrive(0, 0);
 					m_autoStep = 6;
-					autoCount = 0;
+					m_autoCount = 0;
 				}
 				break;
 			
@@ -255,42 +274,61 @@ public class Robot extends TimedRobot {
 			case 6:
 				
 				m_elevator.eject();
-				autoCount++;
+				m_autoCount++;
 				
-				if(autoCount > 50) {
+				if(m_autoCount > 50) {
 					m_elevator.stopIntake();
 					m_autoStep = 7;
-					autoCount = 0;
+					m_autoCount = 0;
 					m_encoders.reset();
 				}
 				break;
 			
 			// Back up for 60 inches
 			case 7:
+
+				if(m_encoders.getDistance()<-10)
+					m_elevator.setLevel(LiftLevels.GROUND);
 				
 				if(m_encoders.getDistance() < -55) {
 					m_drive.tankDrive(0, 0);
 					m_autoStep = 8;
-					m_elevator.setLevel(LiftLevels.GROUND);
+					
 				}else {
-					driveStraight(-0.5,0);
+					driveStraight(-0.65,0);
 				}
 				
 				break;
 				
 			case 8:
 				if(m_switchPosition == 'R') {
-					if(m_ahrs.getYaw() < -55) {
+					if(m_ahrs.getYaw() < -35) {
 						speed = AutoSpeed.TURN_LOW.speed();
 					}else {
 						speed = AutoSpeed.TURN_HIGH.speed();
 					}
 					
-					if(m_ahrs.getYaw() < 3) {
+					if(m_ahrs.getYaw() < -40) {
 						m_drive.tankDrive(0, 0);
 						m_autoStep = 9;
 						m_encoders.reset();
-						autoCount = 0;
+						m_autoCount = 0;
+					}
+					m_drive.tankDrive(-speed,speed);
+				}
+
+				if(m_switchPosition == 'L') {
+					if(m_ahrs.getYaw() > 35) {
+						speed = AutoSpeed.TURN_LOW.speed();
+					}else {
+						speed = AutoSpeed.TURN_HIGH.speed();
+					}
+					
+					if(m_ahrs.getYaw() > 40) {
+						m_drive.tankDrive(0, 0);
+						m_autoStep = 9;
+						m_encoders.reset();
+						m_autoCount = 0;
 					}
 					m_drive.tankDrive(speed,-speed);
 				}
@@ -298,7 +336,37 @@ public class Robot extends TimedRobot {
 
 			case 9:
 
+				m_elevator.grab();
+				if(m_encoders.getDistance() > 47) {
+					speed = 0.6;
+				}else {
+					speed = 0.65;
+				}	
 				
+				if(m_encoders.getDistance() > 55) {
+					m_drive.tankDrive(0, 0);
+					m_autoStep = 10;
+					m_autoTime = 0;
+				}else {
+					if(m_switchPosition == 'R')
+						driveStraight(speed,-45);
+					if(m_switchPosition == 'L')
+						driveStraight(speed,45);
+				}
+				
+				break;
+
+			case 10:
+
+				m_autoTime++;
+				if(m_autoTime == 25)
+					m_elevator.stopIntake();
+
+				if(m_autoTime == 35){
+					m_elevator.setLevel(LiftLevels.EXCHANGE);
+				}
+					
+
 				break;
 			}
 		}
@@ -347,211 +415,216 @@ public class Robot extends TimedRobot {
 						m_drive.tankDrive(0, 0);
 						m_autoStep = 1;
 						m_encoders.reset();
-						autoCount = 0;
-					}else {
-						driveStraight(speed,0);
-					}
-					
-					break;
-					
-				// Turn and raise the elevator	
-				case 1:
-					
-					if(m_ahrs.getYaw() < -15) {
-						speed = AutoSpeed.TURN_LOW.speed();
-					}else {
-						speed = AutoSpeed.TURN_HIGH.speed();
-					}
-					m_elevator.setLevel(LiftLevels.SCALEHIGH);
-					if(m_ahrs.getYaw() < -23) {
-						speed = 0;
-						m_drive.tankDrive(0, 0);
-						if(m_elevator.getRaw()> 20000) {
-							autoCount = 0;
-							m_autoStep = 2;
-							m_encoders.reset();
-						}
-					}
-					m_drive.tankDrive(-speed,speed);
-					
-					break;
-				// Drive to scale
-				case 2:
-					driveStraight(0.5,-25);
-					if((m_encoders.getDistance() > 46)) {
-						m_drive.tankDrive(0, 0);
-						m_autoStep = 3;
-						m_encoders.reset();
-						autoCount = 0;
-					}
-					break;
-				// Shoot	
-				case 3:
-					m_elevator.eject();
-					autoCount++;
-					
-					if(autoCount > 50) {
-						m_elevator.stopIntake();
-						m_autoStep = 4;
-						autoCount = 0;
-					}
-					break;
-				// Back Up
-				case 4:
-
-					autoCount++;
-					driveStraight(-0.5, -25);
-					if(autoCount > 75) {
-						m_elevator.setLevel(LiftLevels.GROUND);
-						m_autoStep = 5;
-						autoCount = 0;
-					}
-					break;
-				case 5:
-					
-					if(m_ahrs.getYaw() < -110) {
-						speed = AutoSpeed.TURN_LOW.speed();
-					}else {
-						speed = AutoSpeed.TURN_HIGH.speed();
-					}
-
-					if(m_ahrs.getYaw() < -125) {
-						m_drive.tankDrive(0, 0);
-						m_autoStep = 6;
-						m_encoders.reset();
-						autoCount = 0;
-					}
-					m_drive.tankDrive(-speed,speed);
-					
-					
-				break;
-				
-				case 6:
-					
-					break;
-				}
-			}
-		
-			// Opposite side (Cross)
-			if(m_scalePosition == 'L') {
-				switch(m_autoStep) {
-				case 0:
-					m_elevator.setLevel(LiftLevels.EXCHANGE);
-					if(m_encoders.getDistance() > 160) {
-						speed = 0.6;
-					}else {
-						speed = 0.72;
-					}
-					// Aiming for 226-20
-					if((m_encoders.getDistance() > 204)) {
-						m_drive.tankDrive(0, 0);
-						m_autoStep = 1;
-						m_encoders.reset();
-						autoCount = 0;
-					}else {
-						driveStraight(speed,0);
-					}
-					
-					break;
-					
-				case 1:
-					// turn
-					if(m_ahrs.getYaw() < -75) {
-						speed = AutoSpeed.TURN_LOW.speed();
-					}else {
-						speed = AutoSpeed.TURN_HIGH.speed();
-					}
-	
-					if(m_ahrs.getYaw() < -85) {
-						m_drive.tankDrive(0, 0);
-						m_autoStep = 2;
-						m_encoders.reset();
-						autoCount = 0;
-					}
-					m_drive.tankDrive(-speed,speed);
-					
-					break;
-					// Drive over the bump and over to the other side of the Scale
-				case 2:
-					if(m_encoders.getDistance() > 200) {
-						speed = 0.55;
-					}else {
-						speed = 0.7;
-					}
-					// Aiming for 226-20
-					if((m_encoders.getDistance() > 230)) {
-						m_drive.tankDrive(0, 0);
-						m_autoStep = 3;
-						m_encoders.reset();
-						autoCount = 0;
-					}else {
-						driveStraight(speed,-90);
-					}
-					break;
-					// Turn forward
-				case 3:
-					
-					// turn
-					if(m_ahrs.getYaw() > 16) {
-						speed = AutoSpeed.TURN_LOW.speed();
-					}else {
-						speed = AutoSpeed.TURN_HIGH.speed();
-					}
-					m_elevator.setLevel(LiftLevels.SCALEHIGH);
-	
-					if(m_ahrs.getYaw() > 20) {
-						m_drive.tankDrive(0, 0);
-						m_autoStep = 4;
-						m_encoders.reset();
-						autoCount = 0;
-					}
-					m_drive.tankDrive(speed,-speed);
-					
-					break;
-					// Drive to scale
-				case 4:
-					driveStraight(0.5,30);
-					if((m_encoders.getDistance() > 56)) {
-						m_drive.tankDrive(0, 0);
-						m_autoStep = 5;
-						m_encoders.reset();
-						autoCount = 0;
-					}
-					break;
-				// Shoot	
-				case 5:
-					m_elevator.eject();
-					autoCount++;
-					
-					if(autoCount > 50) {
-						m_elevator.stopIntake();
-						m_autoStep = 6;
-						autoCount = 0;
-					}
-					break;
-				// Back Up
-				case 6:
-	
-					autoCount++;
-					driveStraight(-0.5, 30);
-					if(autoCount > 75) {
-						m_elevator.setLevel(LiftLevels.GROUND);
-						m_autoStep = 7;
-						autoCount = 0;
+						m_autoCount = 0;
 					}
 					break;
 				case 7:
 				break;				
 				}	
 			}
-			
+		}	
 
-			runs++;
-			if(runs > 4) {
-				RPM = (Math.abs(m_encoders.getRaw()-encoderOffset)/1024)*600;
-				runs = 0;
-				encoderOffset = m_encoders.getRaw();
-			}
+		if(m_autoMode.equals("slam right")){
+			// If the scale is on our side, proceed driving to the scale
+				if(m_scalePosition == 'R') {
+					
+					switch(m_autoStep) {
+					
+					// Drive to the scale
+					case 0:		
+						if(m_encoders.getDistance() > 230) {
+							speed = 0.5;
+						}else {
+							speed = 0.8;
+						}		
+						if((m_encoders.getDistance() > 292)) {
+							m_drive.tankDrive(0, 0);
+							m_autoStep = 1;
+							m_encoders.reset();
+							m_autoCount = 0;
+						}else {
+							driveStraight(speed,0);
+						}		
+						if( m_encoders.getDistance() > 384) {
+							m_drive.tankDrive(0, 0);
+						}
+						
+						break;
+					
+					// Turn to face the Scale
+					case 1:
+			
+						if(m_ahrs.getYaw() < -80) {
+							speed = 0.5;
+						}else {
+							speed = 0.6;
+						}
+						
+						if(m_ahrs.getYaw() < -88) {
+							m_drive.tankDrive(0, 0);
+							m_autoStep = 2;
+							m_encoders.reset();
+							m_autoCount = 0;
+						}
+						m_drive.tankDrive(-speed,speed);
+						
+						break;
+					
+					// Back up and square against the wall
+					case 2:
+						m_autoCount++;
+						m_elevator.setLevel(LiftLevels.EXCHANGE);
+						driveStraight(-0.55, -90);
+						if(m_rpm < 0.1 && m_autoCount > 25) {
+							m_autoStep = 3;
+							m_autoCount = 0;
+						}
+						
+						break;
+						
+					// Lift the elevator and proceed after 2 seconds	
+					case 3:
+						m_autoCount++;
+						m_elevator.setLevel(LiftLevels.SCALEHIGH);
+						if(m_autoCount > 100) {
+							m_autoStep = 4;
+							m_encoders.reset();
+						}
+						break;
+					
+					// Drive forward to the Scale
+					case 4:
+						driveStraight(0.5, -90);
+						if(m_encoders.getDistance() > 24) {
+							m_drive.tankDrive(0, 0);
+							m_autoStep = 5;
+							m_autoCount = 0;
+						}
+						break;
+						
+					// Eject the cube
+					case 5:
+						m_elevator.eject();
+						m_autoCount++;
+						
+						if(m_autoCount > 50) {
+							m_elevator.stopIntake();
+							m_autoStep = 6;
+							m_autoCount = 0;
+						}
+						break;
+						
+					// Drive backwards until the wall is hit
+					case 6:
+						driveStraight(-0.5, -90);
+						m_autoCount++;
+						
+						if(m_autoCount > 120 || (m_rpm < 0.1 && m_autoCount > 50)) {
+							m_drive.tankDrive(0,0);
+							m_autoStep = 7;
+							m_autoCount = 0;
+						}
+						break;
+					
+					// Lower the lift
+					case 7:
+						m_elevator.setLevel(LiftLevels.GROUND);
+						break;
+						
+					// Empty Case
+					case 8:
+						break;
+					}
+				
+				// If the scale is not on our side, cross the line
+				}else {
+					switch(m_autoStep) {
+					
+					// Cross the line
+					case 0:
+						m_elevator.setLevel(LiftLevels.EXCHANGE);
+						if(m_encoders.getDistance() > 115) {
+							speed = 0.45;
+						}else {
+							speed = 0.6;
+						}
+						
+						
+						if(m_encoders.getDistance() > 135) {
+							m_drive.tankDrive(0, 0);
+							
+							if(m_switchPosition == 'R') {
+								m_autoStep = 1;
+								m_elevator.setLevel(LiftLevels.SWITCH);
+							}
+							
+						}else {
+							driveStraight(speed,0);
+						}
+						break;
+					
+					// Turn
+					case 1:
+						
+						if(m_ahrs.getYaw() > -70) {
+							speed = 0.6;
+						}else {
+							speed = 0.5;
+						}
+						
+						if(m_ahrs.getYaw() < -80) {
+							m_drive.tankDrive(0, 0);
+							m_autoStep = 2;
+							m_autoCount = 0;
+						}
+						
+						m_drive.tankDrive(-speed, speed);
+						
+					break;
+					
+					case 2:
+						
+						driveStraight(0.5, -90);
+						m_autoCount++;
+						if(m_rpm < 2 && m_autoCount > 25) {
+							m_drive.tankDrive(0, 0);
+							m_autoStep = 3;
+							m_autoCount = 0;
+						}
+						
+						break;
+						
+					case 3:
+						
+						m_elevator.eject();
+						m_autoCount++;
+						
+						if(m_autoCount > 50) {
+							m_elevator.stopIntake();
+							m_autoStep = 4;
+							m_autoCount = 0;
+						}
+						
+						break;
+						
+						
+						
+					case 4:
+						
+						driveStraight(-0.5,-90);
+						m_autoCount++;
+						if(m_rpm < 2 && m_autoCount > 25) {
+							m_drive.tankDrive(0, 0);
+							m_elevator.setLevel(LiftLevels.GROUND);
+							m_autoStep = 5;
+						}
+						
+						break;
+						
+					case 5:
+						break;
+				}	
+			}	
 		}
     }
 
@@ -559,10 +632,10 @@ public class Robot extends TimedRobot {
 		double gyro = m_ahrs.getYaw();
 		double turn = 0;
 		if(gyro > heading+0.5) {
-			turn = -0.2;
+			turn = -0.35;
 		}
 		if(gyro < heading-0.5) {
-			turn = 0.2;	
+			turn = 0.35;	
 		}
 		if(gyro >= heading-0.5 && gyro <= heading + 0.5) {
 			turn = 0;
@@ -616,12 +689,17 @@ public class Robot extends TimedRobot {
 	
 	public void robotPeriodic() {
 		SmartDashboard.putBoolean("BreakBeamSensor", !m_beam2.get());
+
+
+		m_rpm = Math.abs(((m_encoders.getRaw()-m_encoderOffset)/204.8)*50);
+		m_encoderOffset = m_encoders.getRaw();
+		SmartDashboard.putNumber("feedback", m_rpm);
 	}
 
 	// Class to manage Talon encoder feedback
 	public class Encoders{	
 		double cycles = 0;
-		double toInches =55.245648042746041975368465658798;
+		double toInches = 55.245648042746041975368465658798;
 	
 		public void reset() {
 			m_r1.setSelectedSensorPosition(0, 0, 50);
@@ -659,8 +737,11 @@ public class Robot extends TimedRobot {
     
     public void resetNavigation(){	
 		m_encoders.reset();
-        m_autoSetpoint = 0;
+
 		m_autoTime = 0;
-        m_autoComplete = false;
+	}
+
+	public String autoMode(){
+		return autoModes.getSelected();
 	}
 }

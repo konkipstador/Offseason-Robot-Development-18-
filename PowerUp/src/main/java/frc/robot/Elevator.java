@@ -58,36 +58,32 @@ public class Elevator {
 	}
 
 	public double percent() {
+		System.out.println(getRaw());
 		currentPos = getRaw();
 
-		if(currentPos <= 1300 && currentPos <= 10500) {
+		if(currentPos <= 10500) {
+			System.out.print("low");
 			return 1;
 		}
 
 		if(currentPos > 10500 && currentPos <= 20500) {
-			return 0.65;
+			System.out.print("med");
+			return 0.75;
 		}
 
-		if(currentPos > 20500 && currentPos <= 26000) {
-			return 0.5;
-		}
-
+		System.out.print("high");
 		return 0.5;
 	}
 
 	public double returnTurn() {
 		currentPos = getRaw();
 		
-		if(currentPos <= 1300 && currentPos <= 10500) {
+		if(currentPos <= 10500) {
 			return 0.75;
 		}
 
 		if(currentPos > 10500 && currentPos <= 20500) {
-			return 0.6;
-		}
-
-		if(currentPos > 20500 && currentPos <= 26000) {
-			return 0.5;
+			return 0.65;
 		}
 
 		return 0.5;
